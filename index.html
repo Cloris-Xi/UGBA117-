@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamFlow — Turn group assignments into a clear team plan</title>
+<meta name="description" content="TeamFlow reads your assignment, breaks it into tasks, suggests a fair workload split, and helps your team stay on schedule.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <a href="#top" class="logo">
+      <span class="logo-mark" aria-hidden="true">TF</span>
+      <span class="logo-word">TeamFlow</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="#how-it-works">Workflow</a>
+      <a href="#demo">Demo</a>
+      <a href="#features">Features</a>
+      <a href="#compare">Why TeamFlow</a>
+      <a href="#mvp">MVP</a>
+    </nav>
+    <a class="btn btn-small btn-primary" href="#demo">Build a Team Plan</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">For student group projects</p>
+        <h1 class="display-xl">Turn group assignments into a clear team plan.</h1>
+        <p class="hero-sub">Upload your assignment. TeamFlow breaks it into tasks, suggests a fair division of work, and helps your team stay on schedule.</p>
+        <div class="hero-ctas">
+          <a href="#demo" class="btn btn-primary">Build a Team Plan</a>
+          <a href="#how-it-works" class="btn btn-ghost">See How It Works</a>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-hidden="false" role="img" aria-label="Preview of a TeamFlow plan: a class presentation assignment broken into tasks for four team members, with a balanced workload and an upcoming deadline.">
+        <div class="rubric-card">
+          <div class="rubric-tab">DUE IN 12 DAYS</div>
+          <div class="rubric-head">
+            <span class="rubric-kicker">ASSIGNMENT</span>
+            <h2 class="rubric-title">20-min Class Presentation</h2>
+          </div>
+          <ul class="rubric-members" aria-label="Team members">
+            <li><span class="avatar" style="--av:#E7B94A">A</span>Alex</li>
+            <li><span class="avatar" style="--av:#5F7A5E">M</span>Maya</li>
+            <li><span class="avatar" style="--av:#B3514A">L</span>Leo</li>
+            <li><span class="avatar" style="--av:#7C8FA6">N</span>Nina</li>
+          </ul>
+          <ul class="rubric-tasks">
+            <li><span class="dot dot-done"></span>Background research <span class="who">Alex</span></li>
+            <li><span class="dot dot-progress"></span>Case analysis <span class="who">Leo</span></li>
+            <li><span class="dot dot-todo"></span>Slide design <span class="who">Maya</span></li>
+            <li><span class="dot dot-todo"></span>Rehearsal <span class="who">All</span></li>
+          </ul>
+          <div class="rubric-meter">
+            <span class="meter-label">Workload balance</span>
+            <div class="meter-track"><div class="meter-fill" style="--fill:88%"></div></div>
+            <span class="meter-status">Balanced</span>
+          </div>
+          <div class="rubric-meeting">
+            <span class="meeting-dot" aria-hidden="true"></span>
+            Next meeting — Thu 6:00 PM
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE PROBLEM ============ -->
+  <section class="problem" id="problem">
+    <div class="wrap">
+      <h2 class="display-md">Group projects should not be this difficult.</h2>
+      <div class="problem-grid">
+        <div class="problem-card">
+          <span class="problem-tag">Unclear responsibilities</span>
+          <p>"Everyone thought someone else was making the final slides."</p>
+        </div>
+        <div class="problem-card">
+          <span class="problem-tag">Unequal workloads</span>
+          <p>"Two people did the research, the analysis, and the slides — everyone else just showed up to present."</p>
+        </div>
+        <div class="problem-card">
+          <span class="problem-tag">Scheduling conflicts</span>
+          <p>"We spent three group chats just trying to find one hour that worked for everyone."</p>
+        </div>
+        <div class="problem-card">
+          <span class="problem-tag">Missed deadlines &amp; scattered files</span>
+          <p>"The final version was somewhere between four group chats and someone's email drafts."</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="how" id="how-it-works">
+    <div class="wrap">
+      <p class="eyebrow">How TeamFlow works</p>
+      <h2 class="display-md">One assignment, four steps, one shared plan.</h2>
+      <ol class="steps">
+        <li class="step">
+          <span class="step-num">01</span>
+          <h3>Upload the assignment</h3>
+          <p>TeamFlow reads a PDF, screenshot, email, or plain text and identifies the deadline, deliverables, and grading requirements.</p>
+        </li>
+        <li class="step">
+          <span class="step-num">02</span>
+          <h3>Add your team</h3>
+          <p>Members enter their skills, interests, available time, and scheduling preferences.</p>
+        </li>
+        <li class="step">
+          <span class="step-num">03</span>
+          <h3>Review the AI plan</h3>
+          <p>TeamFlow creates tasks, suggests owners, estimates workload, and recommends internal deadlines and meeting times. Nothing is final until your team confirms it — every task can be edited or exchanged.</p>
+        </li>
+        <li class="step">
+          <span class="step-num">04</span>
+          <h3>Work together</h3>
+          <p>The confirmed plan is saved to a shared tracker, and key dates are added to Google Calendar.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ DEMO ============ -->
+  <section class="demo" id="demo">
+    <div class="wrap">
+      <p class="eyebrow">Build a team plan</p>
+      <h2 class="display-md">Paste your assignment, add your team.</h2>
+      <p class="section-sub">TeamFlow reads the assignment and suggests a task plan for your team. Nothing is final until you confirm it.</p>
+
+      <div class="card upload-card">
+        <div class="card-head">
+          <h3>Step 1 — Your assignment</h3>
+        </div>
+        <label class="field-label" for="assignmentText">Paste the assignment description</label>
+        <textarea id="assignmentText" class="assignment-input" rows="5" placeholder="e.g. Prepare a 20-minute group presentation on a case study of your choice. Due in two weeks. Grading: content depth (40%), analysis (30%), delivery (30%)..."></textarea>
+
+        <div class="card-head" style="margin-top: 24px;">
+          <h3>Step 2 — Your team</h3>
+          <span class="hint">Skills and availability help TeamFlow suggest fair owners</span>
+        </div>
+        <div id="teamForm" class="team-form"></div>
+        <button type="button" id="addMemberBtn" class="btn btn-small btn-ghost add-member-btn">+ Add member</button>
+
+        <button type="button" id="analyzeBtn" class="btn btn-primary" style="margin-top: 20px;">Build a Team Plan</button>
+        <p id="analyzeStatus" class="analyze-status" role="status" aria-live="polite"></p>
+      </div>
+
+      <div id="assignmentSummary" class="assignment-summary" hidden></div>
+
+      <div class="demo-layout" style="margin-top: 32px;">
+        <div class="demo-tasks card">
+          <div class="card-head">
+            <h3>Task plan</h3>
+            <div class="card-head-actions">
+              <span class="hint">Click a name to reassign · click status to update</span>
+              <button type="button" id="exportCsvBtn" class="btn btn-small btn-ghost">Export as CSV</button>
+            </div>
+          </div>
+          <div id="taskList" class="task-list" role="list"></div>
+        </div>
+
+        <div class="demo-side">
+          <div class="card workload-card">
+            <h3>Workload balance</h3>
+            <div id="workloadBars" class="workload-bars"></div>
+            <p id="workloadMsg" class="workload-msg">Workload looks balanced.</p>
+          </div>
+
+          <div class="card risk-card" id="riskCard">
+            <h3>Risk alerts</h3>
+            <div id="riskList" class="risk-list"></div>
+          </div>
+        </div>
+      </div>
+      <p class="demo-note">Your assignment, team, and task plan are saved in this browser, so they'll still be here next time you visit this page.</p>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="features" id="features">
+    <div class="wrap">
+      <p class="eyebrow">Core features</p>
+      <h2 class="display-md">What the MVP actually does.</h2>
+      <div class="features-grid">
+        <div class="feature">
+          <h3>Assignment understanding</h3>
+          <p>Reads uploaded briefs and pulls out the deadline, required deliverables, and grading criteria.</p>
+        </div>
+        <div class="feature">
+          <h3>Automatic task breakdown</h3>
+          <p>Splits the assignment into concrete, assignable tasks instead of one long to-do list.</p>
+        </div>
+        <div class="feature">
+          <h3>Fair workload recommendations</h3>
+          <p>Suggests owners based on each member's skills, interests, and available time — and shows the hours next to each name.</p>
+        </div>
+        <div class="feature">
+          <h3>Team scheduling</h3>
+          <p>Recommends meeting times that fit the group's stated availability.</p>
+        </div>
+        <div class="feature">
+          <h3>Progress and risk tracking</h3>
+          <p>Flags tasks that are running late and shows what else that delay could affect.</p>
+        </div>
+        <div class="feature">
+          <h3>Final submission checklist</h3>
+          <p>Pulls every deliverable back together into one list before you submit.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COMPARISON ============ -->
+  <section class="compare" id="compare">
+    <div class="wrap">
+      <p class="eyebrow">Why not just use ChatGPT or a task manager?</p>
+      <h2 class="display-md">A connected group-project workflow, not just another tool.</h2>
+      <div class="table-scroll">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th scope="col">Capability</th>
+              <th scope="col">TeamFlow</th>
+              <th scope="col">General AI chatbot</th>
+              <th scope="col">Normal task manager</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Understands assignment instructions</th><td class="yes">Yes</td><td class="partial">With the right prompt</td><td class="no">No</td></tr>
+            <tr><th scope="row">Creates a full task structure</th><td class="yes">Yes</td><td class="partial">If you ask it to</td><td class="partial">Manual setup</td></tr>
+            <tr><th scope="row">Uses team skills and availability</th><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td></tr>
+            <tr><th scope="row">Checks workload balance</th><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td></tr>
+            <tr><th scope="row">Suggests meeting times</th><td class="yes">Yes</td><td class="partial">If described in detail</td><td class="no">No</td></tr>
+            <tr><th scope="row">Tracks project risks</th><td class="yes">Yes</td><td class="no">No</td><td class="partial">Manual updates only</td></tr>
+            <tr><th scope="row">Creates a final checklist</th><td class="yes">Yes</td><td class="partial">If you ask it to</td><td class="partial">Manual setup</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="compare-note">General chatbots and task managers are useful tools on their own — TeamFlow connects assignment understanding, fair task planning, and scheduling into one workflow built specifically for group coursework.</p>
+    </div>
+  </section>
+
+  <!-- ============ MVP / FUTURE ============ -->
+  <section class="mvp" id="mvp">
+    <div class="wrap mvp-grid">
+      <div class="mvp-col">
+        <p class="eyebrow">Available now</p>
+        <h2 class="display-sm">MVP</h2>
+        <ul class="check-list">
+          <li>Assignment upload</li>
+          <li>Task breakdown</li>
+          <li>Fair task-plan suggestion</li>
+          <li>Google Sheets export</li>
+          <li>Google Calendar integration</li>
+        </ul>
+      </div>
+      <div class="mvp-col mvp-future">
+        <p class="eyebrow">Planned next</p>
+        <h2 class="display-sm">Later</h2>
+        <ul class="check-list check-list-future">
+          <li>Automatic progress tracking</li>
+          <li>Meeting-note summaries</li>
+          <li>Email reminders</li>
+          <li>Workload scoring</li>
+          <li>Project-risk alerts</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL CTA ============ -->
+  <section class="final-cta">
+    <div class="wrap final-cta-inner">
+      <h2 class="display-md">Make your next group project easier to manage.</h2>
+      <p class="hero-sub">Start with one assignment and turn it into a fair, editable, and trackable team plan.</p>
+      <div class="hero-ctas">
+        <a href="#demo" class="btn btn-primary">Create a Team Plan</a>
+        <a href="#how-it-works" class="btn btn-ghost">View the MVP Workflow</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <span class="logo-mark" aria-hidden="true">TF</span>
+      <p class="footer-tagline">TeamFlow<br>AI coordination for student group projects</p>
+    </div>
+    <nav class="footer-nav" aria-label="Footer">
+      <a href="#features">Product</a>
+      <a href="#how-it-works">Workflow</a>
+      <a href="#mvp">MVP</a>
+      <a href="mailto:hello@teamflow.app">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
