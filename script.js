@@ -3,7 +3,9 @@
 //
 // Flow:
 //  1. User pastes an assignment description and fills in the team form.
-//  2. "Build a Team Plan" calls the Netlify function analyze-assignment,
+//  2. "Build a Team Plan" calls the analyze-assignment function (Vercel's
+//     /api route or Netlify's /.netlify/functions route — whichever the
+//     site is deployed on),
 //     which asks Claude to extract the deadline/deliverables/criteria and
 //     suggest a task plan.
 //  3. The plan renders into the editable task list (reassign owner, change
@@ -501,22 +503,31 @@
 
     let result = null;
 
-    try {
-      const response = await fetch("/.netlify/functions/analyze-assignment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          assignmentText,
-          teamMembers: activeMembers.map((m) => ({ name: m.name, skills: m.skills, availability: m.availability })),
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        result = { deadline: data.deadline, deliverables: data.deliverables || [], gradingCriteria: data.gradingCriteria || [], tasks: data.tasks || [] };
+    const requestBody = JSON.stringify({
+      assignmentText,
+      teamMembers: activeMembers.map((m) => ({ name: m.name, skills: m.skills, availability: m.availability })),
+    });
+
+    // Try the Vercel-style endpoint first, then the Netlify one. Whichever
+    // platform this is deployed on, the other one will just 404 and get
+    // skipped — no configuration needed on the frontend side.
+    for (const endpoint of ["/api/analyze-assignment", "/.netlify/functions/analyze-assignment"]) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+        if (response.status === 404) continue; // this platform doesn't have this endpoint, try the next one
+        const data = await response.json();
+        if (response.ok) {
+          result = { deadline: data.deadline, deliverables: data.deliverables || [], gradingCriteria: data.gradingCriteria || [], tasks: data.tasks || [] };
+        }
+        // Any other non-OK response (e.g. no API key configured yet) falls through to the local planner below.
+        break;
+      } catch (err) {
+        // Network error on this endpoint — try the next one.
       }
-      // Non-OK response (e.g. no API key configured yet) falls through to the local planner below.
-    } catch (err) {
-      // Function not deployed yet, or a network error — fall back silently.
     }
 
     const usedFallback = !result;
