@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="google-config.js"></script>
 </head>
 <body>
 
@@ -186,6 +188,20 @@
           </div>
         </div>
       </div>
+
+      <div class="card google-card">
+        <div class="card-head">
+          <h3>Step 3 — Save &amp; share</h3>
+        </div>
+        <p class="hint" style="margin-bottom: 14px;">Connect your Google account to save this plan to Sheets and add the deadline to Calendar.</p>
+        <div class="google-actions">
+          <button type="button" id="googleConnectBtn" class="btn btn-small btn-ghost">Connect Google</button>
+          <button type="button" id="saveSheetsBtn" class="btn btn-small btn-ghost" disabled>Save to Google Sheets</button>
+          <button type="button" id="addCalendarBtn" class="btn btn-small btn-ghost" disabled>Add to Google Calendar</button>
+        </div>
+        <p id="googleStatus" class="analyze-status" role="status" aria-live="polite"></p>
+      </div>
+
       <p class="demo-note">Your assignment, team, and task plan are saved in this browser, so they'll still be here next time you visit this page.</p>
     </div>
   </section>

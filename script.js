@@ -592,6 +592,147 @@
   //   // to create events for internal deadlines and team meetings.
   // }
 
+  // ---- Google Sheets / Calendar integration -------------------------------------------------------
+  // Runs entirely in the browser using Google Identity Services — no
+  // backend needed for this part. The user grants access once per
+  // session; the access token is kept in memory only (never saved to
+  // localStorage), so they'll need to reconnect on a fresh visit.
+  let googleAccessToken = null;
+  let googleTokenClient = null;
+
+  const googleConnectBtn = document.getElementById("googleConnectBtn");
+  const saveSheetsBtn = document.getElementById("saveSheetsBtn");
+  const addCalendarBtn = document.getElementById("addCalendarBtn");
+  const googleStatusEl = document.getElementById("googleStatus");
+
+  function googleConfigured() {
+    return typeof GOOGLE_CLIENT_ID !== "undefined" && GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes("YOUR_CLIENT_ID");
+  }
+
+  function initGoogleClient() {
+    if (!googleConfigured() || typeof google === "undefined" || !google.accounts) return;
+    googleTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.events",
+      callback: (response) => {
+        if (response.error) {
+          googleStatusEl.textContent = "Google 授权失败,请重试。";
+          googleStatusEl.classList.add("analyze-status-error");
+          return;
+        }
+        googleAccessToken = response.access_token;
+        googleConnectBtn.textContent = "Connected ✓";
+        googleConnectBtn.disabled = true;
+        saveSheetsBtn.disabled = false;
+        addCalendarBtn.disabled = false;
+        googleStatusEl.classList.remove("analyze-status-error");
+        googleStatusEl.textContent = "Google connected — you can now save to Sheets or add to Calendar.";
+      },
+    });
+  }
+
+  if (googleConnectBtn) {
+    googleConnectBtn.addEventListener("click", () => {
+      if (!googleConfigured()) {
+        googleStatusEl.textContent = "还没配置 Google Client ID —— 先完成 Google Cloud 设置,把 ID 填进 google-config.js。";
+        googleStatusEl.classList.add("analyze-status-error");
+        return;
+      }
+      if (!googleTokenClient) initGoogleClient();
+      if (googleTokenClient) googleTokenClient.requestAccessToken();
+    });
+  }
+
+  async function saveToGoogleSheets() {
+    if (!googleAccessToken) return;
+    saveSheetsBtn.disabled = true;
+    saveSheetsBtn.textContent = "Saving…";
+    googleStatusEl.classList.remove("analyze-status-error");
+
+    try {
+      const createRes = await fetch("https://sheets.googleapis.com/v4/spreadsheets", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${googleAccessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ properties: { title: `TeamFlow Plan — ${new Date().toLocaleDateString()}` } }),
+      });
+      const sheet = await createRes.json();
+      if (!createRes.ok) throw new Error((sheet.error && sheet.error.message) || "创建表格失败");
+
+      const rows = [
+        ["Task", "Owner", "Hours", "Due", "Status"],
+        ...tasks.map((t) => [t.name, teamMember(t.owner).name, t.hours, t.due, statusLabel[t.status]]),
+      ];
+      const updateRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheet.spreadsheetId}/values/A1:append?valueInputOption=RAW`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${googleAccessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ values: rows }),
+        }
+      );
+      if (!updateRes.ok) {
+        const err = await updateRes.json();
+        throw new Error((err.error && err.error.message) || "写入数据失败");
+      }
+
+      googleStatusEl.innerHTML = `Saved — <a href="${sheet.spreadsheetUrl}" target="_blank" rel="noopener">open the sheet</a>`;
+    } catch (err) {
+      googleStatusEl.textContent = "保存到 Sheets 失败: " + err.message;
+      googleStatusEl.classList.add("analyze-status-error");
+    } finally {
+      saveSheetsBtn.disabled = false;
+      saveSheetsBtn.textContent = "Save to Google Sheets";
+    }
+  }
+
+  async function addToGoogleCalendar() {
+    if (!googleAccessToken) return;
+    addCalendarBtn.disabled = true;
+    addCalendarBtn.textContent = "Adding…";
+    googleStatusEl.classList.remove("analyze-status-error");
+
+    try {
+      // NOTE: this is a best-effort date — assignmentInfo.deadline is free
+      // text (e.g. "2 weeks from today" or an AI-extracted phrase), not a
+      // reliable calendar date. Real date parsing would be a good next
+      // upgrade; for now this schedules 14 days out as a placeholder and
+      // puts the actual wording in the event title so nothing is lost.
+      const eventDate = new Date();
+      eventDate.setDate(eventDate.getDate() + 14);
+      const dateStr = eventDate.toISOString().slice(0, 10);
+
+      const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${googleAccessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          summary: "Assignment deadline — " + (assignmentInfo && assignmentInfo.deadline ? assignmentInfo.deadline : "TeamFlow plan"),
+          description: "Added by TeamFlow. Double-check this date against the real assignment deadline.",
+          start: { date: dateStr },
+          end: { date: dateStr },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error((err.error && err.error.message) || "创建日程失败");
+      }
+
+      googleStatusEl.textContent = "Added to Google Calendar — double-check the date against the real deadline.";
+    } catch (err) {
+      googleStatusEl.textContent = "添加到 Calendar 失败: " + err.message;
+      googleStatusEl.classList.add("analyze-status-error");
+    } finally {
+      addCalendarBtn.disabled = false;
+      addCalendarBtn.textContent = "Add to Google Calendar";
+    }
+  }
+
+  if (saveSheetsBtn) saveSheetsBtn.addEventListener("click", saveToGoogleSheets);
+  if (addCalendarBtn) addCalendarBtn.addEventListener("click", addToGoogleCalendar);
+
+  // The Google script loads async, so try initializing once the page has
+  // fully loaded rather than assuming it's ready immediately.
+  window.addEventListener("load", initGoogleClient);
+
   // ---- init -------------------------------------------------------
   loadState();
   renderTeamForm();
