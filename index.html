@@ -322,10 +322,38 @@
       <a href="#features">Product</a>
       <a href="#how-it-works">Workflow</a>
       <a href="#mvp">MVP</a>
+      <button type="button" id="privacyLinkBtn" class="footer-link-btn">Privacy &amp; data use</button>
       <a href="mailto:hello@teamflow.app">Contact</a>
     </nav>
   </div>
 </footer>
+
+<div class="modal-overlay" id="privacyOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
+    <div class="modal-head">
+      <h2 id="privacyTitle">Privacy &amp; data use</h2>
+      <button type="button" id="privacyCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>This is a course-project prototype. Here's exactly what happens to your data — no accounts, no hidden tracking.</p>
+
+      <h3>Assignment text &amp; team info</h3>
+      <p>What you type into the assignment box and team form stays in your browser. When you click "Build a Team Plan," it's sent to a small server function to generate the task plan (using an AI model where one is configured, or a free local rule-based planner otherwise) — it isn't stored on any server or database afterward.</p>
+
+      <h3>Saved locally, on your device only</h3>
+      <p>Your current plan is saved in this browser's local storage so it's still here next time you visit. It never leaves your device unless you explicitly export or sync it (see below). Clearing your browser data will remove it.</p>
+
+      <h3>Google Sheets &amp; Calendar</h3>
+      <p>Connecting Google is optional and only happens if you click "Connect Google." We request the minimum access needed — creating/editing spreadsheets and calendar events, nothing else (not your email, contacts, or files). The access token is kept in memory only for that browser session and is never saved to disk. Nothing is sent to Google unless you click "Save to Google Sheets" or "Add to Google Calendar."</p>
+
+      <h3>CSV export</h3>
+      <p>Downloads a file directly to your device. It doesn't pass through any server.</p>
+
+      <h3>What we don't do</h3>
+      <p>No ads, no third-party trackers, no selling data, no account or password required.</p>
+    </div>
+  </div>
+</div>
 
 <script src="data.js"></script>
 <script src="script.js"></script>
