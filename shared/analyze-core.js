@@ -85,7 +85,20 @@ async function runAnalysis(payload) {
     try {
       parsed = JSON.parse(cleaned);
     } catch {
-      return { status: 502, body: { error: "AI 返回的内容无法解析为结构化数据。", raw: cleaned } };
+      // Model added stray text around the JSON despite instructions —
+      // try pulling out just the {...} block before giving up.
+      const match = cleaned.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          parsed = JSON.parse(match[0]);
+        } catch {
+          // fall through to the error below
+        }
+      }
+    }
+
+    if (!parsed || !Array.isArray(parsed.tasks)) {
+      return { status: 502, body: { error: "AI 返回的内容无法解析为结构化数据。", raw: cleaned.slice(0, 2000) } };
     }
 
     return { status: 200, body: parsed };
