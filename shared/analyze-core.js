@@ -63,7 +63,7 @@ async function runAnalysis(payload) {
       },
       body: JSON.stringify({
         model: "claude-sonnet-5",
-        max_tokens: 1500,
+        max_tokens: 3000,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userMessage }],
       }),
@@ -98,7 +98,16 @@ async function runAnalysis(payload) {
     }
 
     if (!parsed || !Array.isArray(parsed.tasks)) {
-      return { status: 502, body: { error: "AI 返回的内容无法解析为结构化数据。", raw: cleaned.slice(0, 2000) } };
+      const truncated = data.stop_reason === "max_tokens";
+      return {
+        status: 502,
+        body: {
+          error: truncated
+            ? "AI 回复被截断了(内容太长),已经调高了长度上限,请重试一次。"
+            : "AI 返回的内容无法解析为结构化数据。",
+          raw: cleaned.slice(0, 2000),
+        },
+      };
     }
 
     return { status: 200, body: parsed };
