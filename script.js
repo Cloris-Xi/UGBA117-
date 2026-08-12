@@ -911,6 +911,9 @@
   const enableReminderBtn = document.getElementById("enableReminderBtn");
   const disableReminderBtn = document.getElementById("disableReminderBtn");
   const reminderStatusEl = document.getElementById("reminderStatus");
+  const saveAccountBtn = document.getElementById("saveAccountBtn");
+  const loadAccountBtn = document.getElementById("loadAccountBtn");
+  const syncStatusEl = document.getElementById("syncStatus");
 
   function googleConfigured() {
     return typeof GOOGLE_CLIENT_ID !== "undefined" && GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes("YOUR_CLIENT_ID");
@@ -920,7 +923,7 @@
     if (!googleConfigured() || typeof google === "undefined" || !google.accounts) return;
     googleTokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
-      scope: "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/gmail.send",
+      scope: "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email",
       callback: (response) => {
         if (response.error) {
           googleStatusEl.textContent = "Google 授权失败,请重试。";
@@ -933,6 +936,8 @@
         saveSheetsBtn.disabled = false;
         addCalendarBtn.disabled = false;
         sendReminderBtn.disabled = false;
+        saveAccountBtn.disabled = false;
+        loadAccountBtn.disabled = false;
         googleStatusEl.classList.remove("analyze-status-error");
         googleStatusEl.textContent = "Google connected — you can now save to Sheets, add to Calendar, or send a reminder email.";
       },
@@ -1243,6 +1248,128 @@
 
   if (enableReminderBtn) enableReminderBtn.addEventListener("click", enableReminders);
   if (disableReminderBtn) disableReminderBtn.addEventListener("click", disableReminders);
+
+  // ---- account sync (save/load a plan tied to the connected Google account) -------------------------------------------------------
+  function collectFullState() {
+    return {
+      assignmentText: assignmentTextEl.value,
+      requirementsText: requirementsTextEl ? requirementsTextEl.value : "",
+      team,
+      tasks,
+      assignmentInfo,
+      realDeadlineDate: realDeadlineDateEl ? realDeadlineDateEl.value : "",
+    };
+  }
+
+  function applyFullState(planData) {
+    if (!planData) return;
+    if (planData.assignmentText !== undefined) assignmentTextEl.value = planData.assignmentText;
+    if (planData.requirementsText !== undefined && requirementsTextEl) requirementsTextEl.value = planData.requirementsText;
+    if (planData.team && planData.team.length) team = planData.team;
+    if (planData.tasks && planData.tasks.length) tasks = planData.tasks;
+    if (planData.assignmentInfo) assignmentInfo = planData.assignmentInfo;
+    if (planData.realDeadlineDate !== undefined && realDeadlineDateEl) realDeadlineDateEl.value = planData.realDeadlineDate;
+
+    renderTeamForm();
+    renderAssignmentSummary();
+    renderTasks();
+    renderWorkload();
+    renderRiskPanel();
+    saveState();
+  }
+
+  async function saveToAccount() {
+    if (!googleAccessToken) return;
+    saveAccountBtn.disabled = true;
+    saveAccountBtn.textContent = "Saving…";
+    syncStatusEl.classList.remove("analyze-status-error");
+
+    const requestBody = JSON.stringify({ accessToken: googleAccessToken, planData: collectFullState() });
+    let handled = false;
+
+    for (const endpoint of ["/api/save-account", "/.netlify/functions/save-account"]) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+        if (response.status === 404) continue;
+        handled = true;
+        const data = await response.json();
+        if (response.ok) {
+          syncStatusEl.textContent = `Saved to your account (${data.email}) — connect the same Google account on another device to load it.`;
+        } else {
+          syncStatusEl.textContent = data.error || "保存失败,请重试。";
+          syncStatusEl.classList.add("analyze-status-error");
+        }
+        break;
+      } catch (err) {
+        // Try the next endpoint.
+      }
+    }
+
+    if (!handled) {
+      syncStatusEl.textContent = "这个功能需要先配置好后端存储服务(Upstash 的环境变量)才能用。";
+      syncStatusEl.classList.add("analyze-status-error");
+    }
+
+    saveAccountBtn.disabled = false;
+    saveAccountBtn.textContent = "Save to my account";
+  }
+
+  async function loadFromAccount() {
+    if (!googleAccessToken) return;
+    loadAccountBtn.disabled = true;
+    loadAccountBtn.textContent = "Loading…";
+    syncStatusEl.classList.remove("analyze-status-error");
+
+    const requestBody = JSON.stringify({ accessToken: googleAccessToken });
+    let handled = false;
+
+    for (const endpoint of ["/api/load-account", "/.netlify/functions/load-account"]) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+        if (response.status === 404) continue;
+        handled = true;
+        const data = await response.json();
+        if (response.ok) {
+          if (data.planData) {
+            const proceed = window.confirm("找到了一份保存过的计划,加载它会覆盖你现在页面上的内容,确定要加载吗?");
+            if (proceed) {
+              applyFullState(data.planData);
+              syncStatusEl.textContent = `已加载账号(${data.email})里保存的计划,更新于 ${new Date(data.updatedAt).toLocaleString()}。`;
+            } else {
+              syncStatusEl.textContent = "已取消加载。";
+            }
+          } else {
+            syncStatusEl.textContent = `这个账号(${data.email})还没保存过计划。`;
+          }
+        } else {
+          syncStatusEl.textContent = data.error || "加载失败,请重试。";
+          syncStatusEl.classList.add("analyze-status-error");
+        }
+        break;
+      } catch (err) {
+        // Try the next endpoint.
+      }
+    }
+
+    if (!handled) {
+      syncStatusEl.textContent = "这个功能需要先配置好后端存储服务(Upstash 的环境变量)才能用。";
+      syncStatusEl.classList.add("analyze-status-error");
+    }
+
+    loadAccountBtn.disabled = false;
+    loadAccountBtn.textContent = "Load from my account";
+  }
+
+  if (saveAccountBtn) saveAccountBtn.addEventListener("click", saveToAccount);
+  if (loadAccountBtn) loadAccountBtn.addEventListener("click", loadFromAccount);
 
   // The Google script loads async, so try initializing once the page has
   // fully loaded rather than assuming it's ready immediately.
