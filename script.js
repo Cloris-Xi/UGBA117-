@@ -1,5 +1,7 @@
 // -----------------------------------------------------------------------
-// TeamFlow demo logic.
+// TeamFlow app logic — powers app.html only (the landing page at
+// index.html uses site.js for its own nav scrolling, and both pages share
+// privacy-modal.js).
 //
 // Flow:
 //  1. User pastes an assignment description and fills in the team form.
@@ -225,8 +227,8 @@
       .join("");
 
     workloadMsgEl.textContent =
-      spread <= 1.5 ? "Workload looks balanced." : "Workload is uneven — consider moving a task.";
-    workloadMsgEl.classList.toggle("workload-msg-warn", spread > 1.5);
+      spread <= 2.5 ? "Workload looks balanced." : "Workload is uneven — consider moving a task.";
+    workloadMsgEl.classList.toggle("workload-msg-warn", spread > 2.5);
   }
 
   // ---- risk detection (dynamic, based on real task dependencies) -------------------------------------------------------
@@ -594,17 +596,6 @@
   if (analyzeBtn) analyzeBtn.addEventListener("click", buildTeamPlan);
   if (assignmentTextEl) assignmentTextEl.addEventListener("input", saveState);
 
-  // Smooth in-page scrolling, respecting reduced-motion preference.
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  document.querySelectorAll('a[href^="#"]').forEach((link) => {
-    link.addEventListener("click", (e) => {
-      const target = document.querySelector(link.getAttribute("href"));
-      if (!target) return;
-      e.preventDefault();
-      target.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
-    });
-  });
-
   // -----------------------------------------------------------------------
   // INTEGRATION STUBS — where real Google Sheets / Google Calendar
   // integration would be added once a confirmed plan exists.
@@ -771,37 +762,6 @@
   // The Google script loads async, so try initializing once the page has
   // fully loaded rather than assuming it's ready immediately.
   window.addEventListener("load", initGoogleClient);
-
-  // ---- privacy modal -------------------------------------------------------
-  const privacyLinkBtn = document.getElementById("privacyLinkBtn");
-  const privacyOverlay = document.getElementById("privacyOverlay");
-  const privacyCloseBtn = document.getElementById("privacyCloseBtn");
-  let privacyLastFocused = null;
-
-  function openPrivacyModal() {
-    privacyLastFocused = document.activeElement;
-    privacyOverlay.hidden = false;
-    privacyCloseBtn.focus();
-    document.addEventListener("keydown", onPrivacyKeydown);
-  }
-
-  function closePrivacyModal() {
-    privacyOverlay.hidden = true;
-    document.removeEventListener("keydown", onPrivacyKeydown);
-    if (privacyLastFocused) privacyLastFocused.focus();
-  }
-
-  function onPrivacyKeydown(e) {
-    if (e.key === "Escape") closePrivacyModal();
-  }
-
-  if (privacyLinkBtn) privacyLinkBtn.addEventListener("click", openPrivacyModal);
-  if (privacyCloseBtn) privacyCloseBtn.addEventListener("click", closePrivacyModal);
-  if (privacyOverlay) {
-    privacyOverlay.addEventListener("click", (e) => {
-      if (e.target === privacyOverlay) closePrivacyModal();
-    });
-  }
 
   // ---- init -------------------------------------------------------
   loadState();

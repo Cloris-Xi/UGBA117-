@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a Team Plan — TeamFlow</title>
+<meta name="description" content="Paste your assignment, add your team, and get a fair task plan you can save to Google Sheets and Calendar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="google-config.js"></script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <a href="index.html" class="logo">
+      <span class="logo-mark" aria-hidden="true">TF</span>
+      <span class="logo-word">TeamFlow</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html">Overview</a>
+      <a href="index.html#how-it-works">Workflow</a>
+      <a href="index.html#features">Features</a>
+    </nav>
+    <a class="btn btn-small btn-ghost" href="index.html">&larr; Back to overview</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="demo" id="demo" style="border-top: none; padding-top: 48px;">
+    <div class="wrap">
+      <p class="eyebrow">Build a team plan</p>
+      <h1 class="display-md">Paste your assignment, add your team.</h1>
+      <p class="section-sub">TeamFlow reads the assignment and suggests a task plan for your team. Nothing is final until you confirm it.</p>
+
+      <div class="card upload-card">
+        <div class="card-head">
+          <h3>Step 1 — Your assignment</h3>
+        </div>
+        <label class="field-label" for="assignmentText">Paste the assignment description</label>
+        <textarea id="assignmentText" class="assignment-input" rows="5" placeholder="e.g. Prepare a 20-minute group presentation on a case study of your choice. Due in two weeks. Grading: content depth (40%), analysis (30%), delivery (30%)..."></textarea>
+
+        <div class="card-head" style="margin-top: 24px;">
+          <h3>Step 2 — Your team</h3>
+          <span class="hint">Skills and availability help TeamFlow suggest fair owners</span>
+        </div>
+        <div id="teamForm" class="team-form"></div>
+        <button type="button" id="addMemberBtn" class="btn btn-small btn-ghost add-member-btn">+ Add member</button>
+
+        <button type="button" id="analyzeBtn" class="btn btn-primary" style="margin-top: 20px;">Build a Team Plan</button>
+        <p id="analyzeStatus" class="analyze-status" role="status" aria-live="polite"></p>
+      </div>
+
+      <div id="assignmentSummary" class="assignment-summary" hidden></div>
+
+      <div class="demo-layout" style="margin-top: 32px;">
+        <div class="demo-tasks card">
+          <div class="card-head">
+            <h3>Task plan</h3>
+            <div class="card-head-actions">
+              <span class="hint">Click a name to reassign · click status to update</span>
+              <button type="button" id="exportCsvBtn" class="btn btn-small btn-ghost">Export as CSV</button>
+            </div>
+          </div>
+          <div id="taskList" class="task-list" role="list"></div>
+        </div>
+
+        <div class="demo-side">
+          <div class="card workload-card">
+            <h3>Workload balance</h3>
+            <div id="workloadBars" class="workload-bars"></div>
+            <p id="workloadMsg" class="workload-msg">Workload looks balanced.</p>
+          </div>
+
+          <div class="card risk-card" id="riskCard">
+            <h3>Risk alerts</h3>
+            <div id="riskList" class="risk-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card google-card">
+        <div class="card-head">
+          <h3>Step 3 — Save &amp; share</h3>
+        </div>
+        <p class="hint" style="margin-bottom: 14px;">Connect your Google account to save this plan to Sheets and add the deadline to Calendar.</p>
+        <div class="google-actions">
+          <button type="button" id="googleConnectBtn" class="btn btn-small btn-ghost">Connect Google</button>
+          <button type="button" id="saveSheetsBtn" class="btn btn-small btn-ghost" disabled>Save to Google Sheets</button>
+          <button type="button" id="addCalendarBtn" class="btn btn-small btn-ghost" disabled>Add to Google Calendar</button>
+        </div>
+        <p id="googleStatus" class="analyze-status" role="status" aria-live="polite"></p>
+      </div>
+
+      <p class="demo-note">Your assignment, team, and task plan are saved in this browser, so they'll still be here next time you visit this page.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <span class="logo-mark" aria-hidden="true">TF</span>
+      <p class="footer-tagline">TeamFlow<br>AI coordination for student group projects</p>
+    </div>
+    <nav class="footer-nav" aria-label="Footer">
+      <a href="index.html">Overview</a>
+      <a href="index.html#mvp">MVP</a>
+      <button type="button" id="privacyLinkBtn" class="footer-link-btn">Privacy &amp; data use</button>
+      <a href="mailto:hello@teamflow.app">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="privacyOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
+    <div class="modal-head">
+      <h2 id="privacyTitle">Privacy &amp; data use</h2>
+      <button type="button" id="privacyCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>This is a course-project prototype. Here's exactly what happens to your data — no accounts, no hidden tracking.</p>
+
+      <h3>Assignment text &amp; team info</h3>
+      <p>What you type into the assignment box and team form stays in your browser. When you click "Build a Team Plan," it's sent to a small server function to generate the task plan (using an AI model where one is configured, or a free local rule-based planner otherwise) — it isn't stored on any server or database afterward.</p>
+
+      <h3>Saved locally, on your device only</h3>
+      <p>Your current plan is saved in this browser's local storage so it's still here next time you visit. It never leaves your device unless you explicitly export or sync it (see below). Clearing your browser data will remove it.</p>
+
+      <h3>Google Sheets &amp; Calendar</h3>
+      <p>Connecting Google is optional and only happens if you click "Connect Google." We request the minimum access needed — creating/editing spreadsheets and calendar events, nothing else (not your email, contacts, or files). The access token is kept in memory only for that browser session and is never saved to disk. Nothing is sent to Google unless you click "Save to Google Sheets" or "Add to Google Calendar." If you fill in teammates' email addresses, clicking "Add to Google Calendar" sends them a calendar invite through Google — only do this with their knowledge.</p>
+
+      <h3>CSV export</h3>
+      <p>Downloads a file directly to your device. It doesn't pass through any server.</p>
+
+      <h3>What we don't do</h3>
+      <p>No ads, no third-party trackers, no selling data, no account or password required.</p>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+<script src="privacy-modal.js"></script>
+</body>
+</html>
