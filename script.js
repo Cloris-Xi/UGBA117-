@@ -58,6 +58,7 @@
   let assignmentImage = null; // { mediaType, data (base64), fileName } — session only, never persisted
   let teamImage = null; // same shape, for the team-roster upload
   let teamUploadText = ""; // text pulled from an uploaded team file — session only
+  let reminderPlanId = null; // set once automatic reminders are enabled
 
   const statusOrder = ["todo", "progress", "done"];
   const statusLabel = { todo: "To do", progress: "In progress", done: "Done" };
@@ -73,6 +74,8 @@
           team,
           tasks,
           assignmentInfo,
+          reminderPlanId,
+          realDeadlineDate: realDeadlineDateEl ? realDeadlineDateEl.value : "",
         })
       );
     } catch (e) {
@@ -93,6 +96,8 @@
     if (saved.assignmentText) assignmentTextEl.value = saved.assignmentText;
     if (saved.requirementsText && requirementsTextEl) requirementsTextEl.value = saved.requirementsText;
     if (saved.assignmentInfo) assignmentInfo = saved.assignmentInfo;
+    if (saved.reminderPlanId) reminderPlanId = saved.reminderPlanId;
+    if (saved.realDeadlineDate && realDeadlineDateEl) realDeadlineDateEl.value = saved.realDeadlineDate;
     return true;
   }
 
@@ -902,6 +907,10 @@
   const addCalendarBtn = document.getElementById("addCalendarBtn");
   const sendReminderBtn = document.getElementById("sendReminderBtn");
   const googleStatusEl = document.getElementById("googleStatus");
+  const realDeadlineDateEl = document.getElementById("realDeadlineDate");
+  const enableReminderBtn = document.getElementById("enableReminderBtn");
+  const disableReminderBtn = document.getElementById("disableReminderBtn");
+  const reminderStatusEl = document.getElementById("reminderStatus");
 
   function googleConfigured() {
     return typeof GOOGLE_CLIENT_ID !== "undefined" && GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes("YOUR_CLIENT_ID");
@@ -1136,6 +1145,105 @@
   if (addCalendarBtn) addCalendarBtn.addEventListener("click", addToGoogleCalendar);
   if (sendReminderBtn) sendReminderBtn.addEventListener("click", sendReminderEmail);
 
+  // ---- automatic (scheduled) reminders — independent of Google -------------------------------------------------------
+  // Unlike the manual "Send reminder email" button above, this one saves
+  // the plan to a small server-side store so a daily scheduled job can
+  // send emails with no one present. See shared/reminder-core.js.
+  async function enableReminders() {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const recipients = team.filter((m) => m.email && emailPattern.test(m.email.trim())).map((m) => m.email.trim());
+    const deadlineDate = realDeadlineDateEl.value;
+
+    if (!deadlineDate) {
+      reminderStatusEl.textContent = "请先选择一个实际的截止日期。";
+      reminderStatusEl.classList.add("analyze-status-error");
+      return;
+    }
+    if (recipients.length === 0) {
+      reminderStatusEl.textContent = "队友邮箱都没填,先在 Step 2 里补上再开启。";
+      reminderStatusEl.classList.add("analyze-status-error");
+      return;
+    }
+
+    enableReminderBtn.disabled = true;
+    enableReminderBtn.textContent = "Saving…";
+    reminderStatusEl.classList.remove("analyze-status-error");
+
+    const requestBody = JSON.stringify({
+      planId: reminderPlanId,
+      deadlineDate,
+      recipients,
+      summaryText: buildReminderEmailBody(),
+    });
+
+    let handled = false;
+    for (const endpoint of ["/api/save-reminder", "/.netlify/functions/save-reminder"]) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+        if (response.status === 404) continue;
+        handled = true;
+        const data = await response.json();
+        if (response.ok) {
+          reminderPlanId = data.planId;
+          saveState();
+          disableReminderBtn.disabled = false;
+          reminderStatusEl.textContent = `Reminders enabled — your team will get an email on: ${(data.reminderDates || []).join(", ")}.`;
+        } else {
+          reminderStatusEl.textContent = data.error || "开启失败,请重试。";
+          reminderStatusEl.classList.add("analyze-status-error");
+        }
+        break;
+      } catch (err) {
+        // Try the next endpoint.
+      }
+    }
+
+    if (!handled) {
+      reminderStatusEl.textContent = "这个功能需要先配置好后端服务(Upstash + Resend 的环境变量)才能用。";
+      reminderStatusEl.classList.add("analyze-status-error");
+    }
+
+    enableReminderBtn.disabled = false;
+    enableReminderBtn.textContent = "Enable automatic reminders";
+  }
+
+  async function disableReminders() {
+    if (!reminderPlanId) return;
+    disableReminderBtn.disabled = true;
+    disableReminderBtn.textContent = "Turning off…";
+
+    const requestBody = JSON.stringify({ planId: reminderPlanId });
+    for (const endpoint of ["/api/cancel-reminder", "/.netlify/functions/cancel-reminder"]) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+        if (response.status === 404) continue;
+        if (response.ok) {
+          reminderPlanId = null;
+          saveState();
+          reminderStatusEl.classList.remove("analyze-status-error");
+          reminderStatusEl.textContent = "Automatic reminders turned off.";
+        }
+        break;
+      } catch (err) {
+        // Try the next endpoint.
+      }
+    }
+
+    disableReminderBtn.disabled = !reminderPlanId ? true : false;
+    disableReminderBtn.textContent = "Turn off reminders";
+  }
+
+  if (enableReminderBtn) enableReminderBtn.addEventListener("click", enableReminders);
+  if (disableReminderBtn) disableReminderBtn.addEventListener("click", disableReminders);
+
   // The Google script loads async, so try initializing once the page has
   // fully loaded rather than assuming it's ready immediately.
   window.addEventListener("load", initGoogleClient);
@@ -1147,4 +1255,8 @@
   renderTasks();
   renderWorkload();
   renderRiskPanel();
+  if (reminderPlanId && disableReminderBtn) {
+    disableReminderBtn.disabled = false;
+    reminderStatusEl.textContent = "Automatic reminders are on for this plan.";
+  }
 })();

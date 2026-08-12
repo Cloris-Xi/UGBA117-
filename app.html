@@ -143,6 +143,20 @@
         <p id="googleStatus" class="analyze-status" role="status" aria-live="polite"></p>
       </div>
 
+      <div class="card reminder-card" id="reminderCard">
+        <div class="card-head">
+          <h3>Step 4 — Automatic email reminders</h3>
+        </div>
+        <p class="hint" style="margin-bottom: 14px;">Confirm the real deadline date, and TeamFlow will automatically email your team as the deadline gets close — no need to come back and click anything. This works independently of Google, using the emails from Step 2.</p>
+        <label class="field-label" for="realDeadlineDate">Confirm the actual deadline date</label>
+        <input type="date" id="realDeadlineDate" class="assignment-input" style="max-width: 200px;">
+        <div class="google-actions" style="margin-top: 16px;">
+          <button type="button" id="enableReminderBtn" class="btn btn-small btn-ghost">Enable automatic reminders</button>
+          <button type="button" id="disableReminderBtn" class="btn btn-small btn-ghost" disabled>Turn off reminders</button>
+        </div>
+        <p id="reminderStatus" class="analyze-status" role="status" aria-live="polite"></p>
+      </div>
+
       <p class="demo-note">Your assignment, team, and task plan are saved in this browser, so they'll still be here next time you visit this page.</p>
     </div>
   </section>
@@ -183,6 +197,9 @@
 
       <h3>CSV export</h3>
       <p>Downloads a file directly to your device. It doesn't pass through any server.</p>
+
+      <h3>Automatic email reminders (Step 4)</h3>
+      <p>This is the one feature that <em>does</em> save data outside your browser — it has to, since it needs to run without you present. Turning it on stores your confirmed deadline date and your teammates' emails on a small database so a scheduled job can email them as the deadline approaches. Turning reminders off deletes this record. Nothing else about your plan (tasks, assignment text) is stored this way.</p>
 
       <h3>What we don't do</h3>
       <p>No ads, no third-party trackers, no selling data, no account or password required.</p>
