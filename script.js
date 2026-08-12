@@ -145,11 +145,6 @@
     return team.find((m) => m.id === id) || team[0];
   }
 
-  function teamMemberByName(name) {
-    const match = team.find((m) => m.name.toLowerCase() === String(name || "").toLowerCase());
-    return match || team[0];
-  }
-
   // ---- task list -------------------------------------------------------
   function nextStatus(current) {
     const i = statusOrder.indexOf(current);
@@ -485,6 +480,32 @@
     });
   }
 
+  // Always decides who gets which task ourselves, ignoring whatever owner
+  // the AI (or local planner) suggested. The AI is only trusted for task
+  // breakdown and hour estimates — actual assignment is a plain greedy
+  // "give it to whoever currently has the least hours" algorithm, with a
+  // small bonus if a member's stated skills match the task name. This
+  // guarantees a consistently balanced result regardless of how good or
+  // uneven the AI's own suggestion was.
+  function assignFairOwners(taskList, members) {
+    const totals = members.map(() => 0);
+    return taskList.map((t) => {
+      let bestIdx = 0;
+      let bestScore = -Infinity;
+      members.forEach((m, i) => {
+        const skillMatch =
+          m.skills && t.name.toLowerCase().split(" ").some((w) => w.length > 3 && m.skills.toLowerCase().includes(w));
+        const score = (skillMatch ? 2 : 0) - totals[i];
+        if (score > bestScore) {
+          bestScore = score;
+          bestIdx = i;
+        }
+      });
+      totals[bestIdx] += t.hours;
+      return members[bestIdx].id;
+    });
+  }
+
   // ---- build the plan: try the real AI function, fall back to the local planner -------------------------------------------------------
   async function buildTeamPlan() {
     const assignmentText = assignmentTextEl.value.trim();
@@ -545,16 +566,18 @@
       gradingCriteria: result.gradingCriteria,
     };
 
-    tasks = deriveDependencies(
-      result.tasks.map((t, i) => ({
-        id: (usedFallback ? "local-" : "ai-") + i,
-        name: t.name,
-        owner: teamMemberByName(t.owner).id,
-        hours: Number(t.hours) || 1,
-        due: t.due || "TBD",
-        status: "todo",
-      }))
-    );
+    const rawTasks = result.tasks.map((t, i) => ({
+      id: (usedFallback ? "local-" : "ai-") + i,
+      name: t.name,
+      hours: Number(t.hours) || 1,
+      due: t.due || "TBD",
+      status: "todo",
+    }));
+    const fairOwners = assignFairOwners(rawTasks, activeMembers);
+    rawTasks.forEach((t, i) => {
+      t.owner = fairOwners[i];
+    });
+    tasks = deriveDependencies(rawTasks);
 
     renderAssignmentSummary();
     renderTasks();
