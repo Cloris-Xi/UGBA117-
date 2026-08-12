@@ -34,7 +34,7 @@
   const riskListEl = document.getElementById("riskList");
 
   // ---- state -------------------------------------------------------
-  let team = TEAM.map((m, i) => ({ ...m, skills: "", availability: "" }));
+  let team = TEAM.map((m, i) => ({ ...m, skills: "", availability: "", email: "" }));
   let tasks = INITIAL_TASKS.map((t) => ({ ...t }));
   let assignmentInfo = null; // { deadline, deliverables, gradingCriteria } once AI has run
 
@@ -80,6 +80,7 @@
         (m, i) => `
         <div class="team-row" data-index="${i}">
           <input type="text" class="team-input team-name" value="${escapeAttr(m.name)}" aria-label="Team member name" placeholder="Name">
+          <input type="email" class="team-input" value="${escapeAttr(m.email)}" aria-label="Email" placeholder="Email (for calendar invites)" data-field="email">
           <input type="text" class="team-input" value="${escapeAttr(m.skills)}" aria-label="Skills" placeholder="Skills (e.g. writing, design)" data-field="skills">
           <input type="text" class="team-input" value="${escapeAttr(m.availability)}" aria-label="Availability" placeholder="Availability (e.g. evenings)" data-field="availability">
           <button type="button" class="team-remove-btn" data-index="${i}" aria-label="Remove ${escapeAttr(m.name) || "this member"}" ${team.length <= 1 ? "disabled" : ""}>&times;</button>
@@ -112,7 +113,7 @@
   function addMember() {
     const usedColors = team.map((m) => m.color);
     const nextColor = COLOR_PALETTE.find((c) => !usedColors.includes(c)) || COLOR_PALETTE[team.length % COLOR_PALETTE.length];
-    team.push({ id: "member-" + Date.now().toString(36), name: "", skills: "", availability: "", color: nextColor });
+    team.push({ id: "member-" + Date.now().toString(36), name: "", skills: "", availability: "", email: "", color: nextColor });
     renderTeamForm();
     renderWorkload();
     saveState();
@@ -293,8 +294,11 @@
   }
 
   function exportTasksAsCsv() {
-    const orderedHeader = ["Task", "Owner", "Hours", "Due", "Status"];
-    const orderedRows = tasks.map((t) => [t.name, teamMember(t.owner).name, t.hours, t.due, statusLabel[t.status]]);
+    const orderedHeader = ["Task", "Owner", "Owner Email", "Hours", "Due", "Status"];
+    const orderedRows = tasks.map((t) => {
+      const owner = teamMember(t.owner);
+      return [t.name, owner.name, owner.email || "", t.hours, t.due, statusLabel[t.status]];
+    });
 
     const lines = [orderedHeader, ...orderedRows].map((row) => row.map(csvEscape).join(","));
 
@@ -659,8 +663,11 @@
       if (!createRes.ok) throw new Error((sheet.error && sheet.error.message) || "创建表格失败");
 
       const rows = [
-        ["Task", "Owner", "Hours", "Due", "Status"],
-        ...tasks.map((t) => [t.name, teamMember(t.owner).name, t.hours, t.due, statusLabel[t.status]]),
+        ["Task", "Owner", "Owner Email", "Hours", "Due", "Status"],
+        ...tasks.map((t) => {
+          const owner = teamMember(t.owner);
+          return [t.name, owner.name, owner.email || "", t.hours, t.due, statusLabel[t.status]];
+        }),
       ];
       const updateRes = await fetch(
         `https://sheets.googleapis.com/v4/spreadsheets/${sheet.spreadsheetId}/values/A1:append?valueInputOption=RAW`,
@@ -701,7 +708,13 @@
       eventDate.setDate(eventDate.getDate() + 14);
       const dateStr = eventDate.toISOString().slice(0, 10);
 
-      const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+      // Anyone who filled in a valid-looking email gets invited to this
+      // event — Google will email them and add it to their own calendar
+      // once they accept. Members without an email just won't get one.
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const attendees = team.filter((m) => m.email && emailPattern.test(m.email.trim())).map((m) => ({ email: m.email.trim() }));
+
+      const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all", {
         method: "POST",
         headers: { Authorization: `Bearer ${googleAccessToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -709,6 +722,7 @@
           description: "Added by TeamFlow. Double-check this date against the real assignment deadline.",
           start: { date: dateStr },
           end: { date: dateStr },
+          attendees,
         }),
       });
       if (!res.ok) {
@@ -716,7 +730,9 @@
         throw new Error((err.error && err.error.message) || "创建日程失败");
       }
 
-      googleStatusEl.textContent = "Added to Google Calendar — double-check the date against the real deadline.";
+      googleStatusEl.textContent = attendees.length
+        ? `Added to Google Calendar and invited ${attendees.length} team member(s) — double-check the date against the real deadline.`
+        : "Added to Google Calendar — double-check the date against the real deadline. (No team emails were filled in, so no one else was invited.)";
     } catch (err) {
       googleStatusEl.textContent = "添加到 Calendar 失败: " + err.message;
       googleStatusEl.classList.add("analyze-status-error");

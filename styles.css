@@ -520,7 +520,7 @@ button { font-family: inherit; cursor: pointer; }
 .team-form { display: flex; flex-direction: column; gap: 10px; }
 .team-row {
   display: grid;
-  grid-template-columns: 1fr 1.4fr 1.4fr auto;
+  grid-template-columns: 1fr 1.3fr 1fr 1fr auto;
   gap: 10px;
   align-items: center;
 }
