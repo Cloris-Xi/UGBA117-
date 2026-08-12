@@ -543,6 +543,7 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--surface-2);
   border-radius: var(--radius-sm);
 }
+.image-preview[hidden] { display: none; }
 .image-preview img {
   max-width: 140px;
   max-height: 100px;

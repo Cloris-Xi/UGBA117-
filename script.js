@@ -33,6 +33,13 @@
   const assignmentImagePreviewEl = document.getElementById("assignmentImagePreview");
   const assignmentImagePreviewImgEl = document.getElementById("assignmentImagePreviewImg");
   const removeImageBtn = document.getElementById("removeImageBtn");
+  const teamImageInput = document.getElementById("teamImageInput");
+  const teamFileInput = document.getElementById("teamFileInput");
+  const teamFileStatusEl = document.getElementById("teamFileStatus");
+  const teamImagePreviewEl = document.getElementById("teamImagePreview");
+  const teamImagePreviewImgEl = document.getElementById("teamImagePreviewImg");
+  const removeTeamImageBtn = document.getElementById("removeTeamImageBtn");
+  const extractTeamBtn = document.getElementById("extractTeamBtn");
   const teamFormEl = document.getElementById("teamForm");
   const analyzeBtn = document.getElementById("analyzeBtn");
   const analyzeStatusEl = document.getElementById("analyzeStatus");
@@ -49,6 +56,8 @@
   let tasks = INITIAL_TASKS.map((t) => ({ ...t }));
   let assignmentInfo = null; // { deadline, deliverables, gradingCriteria } once AI has run
   let assignmentImage = null; // { mediaType, data (base64), fileName } — session only, never persisted
+  let teamImage = null; // same shape, for the team-roster upload
+  let teamUploadText = ""; // text pulled from an uploaded team file — session only
 
   const statusOrder = ["todo", "progress", "done"];
   const statusLabel = { todo: "To do", progress: "In progress", done: "Done" };
@@ -597,6 +606,132 @@
       }
     });
   }
+
+  // ---- team-roster upload (fills the whole team from an image/file) -------------------------------------------------------
+  function updateExtractTeamBtnState() {
+    if (extractTeamBtn) extractTeamBtn.disabled = !teamImage && !teamUploadText;
+  }
+
+  if (teamImageInput) {
+    teamImageInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        teamFileStatusEl.textContent = "请上传图片文件(jpg / png 等)。";
+        teamFileStatusEl.classList.add("analyze-status-error");
+        return;
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        teamFileStatusEl.textContent = "图片太大了,请上传 3MB 以内的图片。";
+        teamFileStatusEl.classList.add("analyze-status-error");
+        return;
+      }
+      try {
+        const dataUrl = await readFileAsDataURL(file);
+        const match = dataUrl.match(/^data:(.*);base64,(.*)$/);
+        if (!match) throw new Error("图片格式无法识别");
+        teamImage = { mediaType: match[1], data: match[2], fileName: file.name };
+        teamImagePreviewImgEl.src = dataUrl;
+        teamImagePreviewEl.hidden = false;
+        teamFileStatusEl.classList.remove("analyze-status-error");
+        teamFileStatusEl.textContent = `已添加图片:${file.name} — 点"Fill team from upload"识别`;
+        updateExtractTeamBtnState();
+      } catch (err) {
+        teamFileStatusEl.textContent = "图片读取失败,请重试。";
+        teamFileStatusEl.classList.add("analyze-status-error");
+      }
+    });
+  }
+
+  if (removeTeamImageBtn) {
+    removeTeamImageBtn.addEventListener("click", () => {
+      teamImage = null;
+      teamImagePreviewEl.hidden = true;
+      teamImageInput.value = "";
+      teamFileStatusEl.textContent = "";
+      updateExtractTeamBtnState();
+    });
+  }
+
+  if (teamFileInput) {
+    teamFileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        teamUploadText = await readFileAsText(file);
+        teamFileStatusEl.classList.remove("analyze-status-error");
+        teamFileStatusEl.textContent = `已添加文件:${file.name} — 点"Fill team from upload"识别`;
+        updateExtractTeamBtnState();
+      } catch (err) {
+        teamFileStatusEl.textContent = "文件读取失败,请重试。";
+        teamFileStatusEl.classList.add("analyze-status-error");
+      } finally {
+        teamFileInput.value = "";
+      }
+    });
+  }
+
+  function applyExtractedTeam(members) {
+    team = members.map((m, i) => ({
+      id: "member-" + Date.now().toString(36) + "-" + i,
+      name: m.name || "",
+      skills: m.skills || "",
+      availability: m.availability || "",
+      email: m.email || "",
+      color: COLOR_PALETTE[i % COLOR_PALETTE.length],
+    }));
+    renderTeamForm();
+    renderWorkload();
+    renderTasks();
+    renderRiskPanel();
+    saveState();
+  }
+
+  async function extractTeamFromUpload() {
+    if (!teamImage && !teamUploadText) return;
+
+    extractTeamBtn.disabled = true;
+    extractTeamBtn.textContent = "Reading…";
+    teamFileStatusEl.classList.remove("analyze-status-error");
+    teamFileStatusEl.textContent = "TeamFlow is reading the upload…";
+
+    const requestBody = JSON.stringify({ teamText: teamUploadText, teamImage });
+    let handled = false;
+
+    for (const endpoint of ["/api/extract-team", "/.netlify/functions/extract-team"]) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+        if (response.status === 404) continue;
+        handled = true;
+        const data = await response.json();
+        if (response.ok && Array.isArray(data.members) && data.members.length) {
+          applyExtractedTeam(data.members);
+          teamFileStatusEl.classList.remove("analyze-status-error");
+          teamFileStatusEl.textContent = `识别出 ${data.members.length} 位成员,已替换原来的团队列表。`;
+        } else {
+          teamFileStatusEl.textContent = data.error || "没能从上传内容里识别出团队成员,换一张更清晰的图片试试。";
+          teamFileStatusEl.classList.add("analyze-status-error");
+        }
+        break;
+      } catch (err) {
+        // Network error on this endpoint — try the next one.
+      }
+    }
+
+    if (!handled) {
+      teamFileStatusEl.textContent = "这个功能需要先配置好 AI 服务(免费本地版无法读取图片/文件内容识别团队成员)。";
+      teamFileStatusEl.classList.add("analyze-status-error");
+    }
+
+    extractTeamBtn.disabled = false;
+    extractTeamBtn.textContent = "Fill team from upload";
+  }
+
+  if (extractTeamBtn) extractTeamBtn.addEventListener("click", extractTeamFromUpload);
 
   async function buildTeamPlan() {
     const rawAssignmentText = assignmentTextEl.value.trim();
