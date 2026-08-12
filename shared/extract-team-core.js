@@ -30,12 +30,14 @@ Respond with STRICT JSON only, no markdown fences, no commentary, in exactly thi
 }`;
 
 async function runTeamExtraction(payload) {
-  const { teamText, teamImage } = payload || {};
+  const { teamText, teamImages, teamDocuments } = payload || {};
 
+  const images = Array.isArray(teamImages) ? teamImages.filter((i) => i && i.data && i.mediaType) : [];
+  const documents = Array.isArray(teamDocuments) ? teamDocuments.filter((d) => d && d.data && d.mediaType) : [];
   const hasText = !!(teamText && teamText.trim().length >= 3);
-  const hasImage = !!(teamImage && teamImage.data && teamImage.mediaType);
+  const hasAttachments = images.length > 0 || documents.length > 0;
 
-  if (!hasText && !hasImage) {
+  if (!hasText && !hasAttachments) {
     return { status: 400, body: { error: "请上传一张图片或文件,或者粘贴一些团队信息文字。" } };
   }
 
@@ -48,16 +50,16 @@ async function runTeamExtraction(payload) {
   }
 
   const userContent = [];
-  if (hasImage) {
-    userContent.push({
-      type: "image",
-      source: { type: "base64", media_type: teamImage.mediaType, data: teamImage.data },
-    });
-  }
+  images.forEach((img) => {
+    userContent.push({ type: "image", source: { type: "base64", media_type: img.mediaType, data: img.data } });
+  });
+  documents.forEach((doc) => {
+    userContent.push({ type: "document", source: { type: "base64", media_type: doc.mediaType, data: doc.data } });
+  });
   userContent.push({
     type: "text",
-    text: `TEAM INFO${hasImage ? " (an image is also attached — read both)" : ""}:\n${
-      teamText && teamText.trim() ? teamText : "(see attached image)"
+    text: `TEAM INFO${hasAttachments ? " (attached files/images are also part of this — read all of them)" : ""}:\n${
+      teamText && teamText.trim() ? teamText : "(see attached files/images)"
     }`,
   });
 

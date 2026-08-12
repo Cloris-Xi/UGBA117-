@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <script src="google-config.js"></script>
 </head>
 <body>
@@ -71,21 +72,13 @@
         <label class="field-label" for="assignmentText">Paste the assignment description</label>
         <textarea id="assignmentText" class="assignment-input" rows="5" placeholder="e.g. Prepare a 20-minute group presentation on a case study of your choice. Due in two weeks..."></textarea>
 
-        <div class="upload-row">
-          <label class="file-upload-btn">
-            Upload image
-            <input type="file" id="assignmentImageInput" accept="image/*" hidden>
-          </label>
-          <label class="file-upload-btn">
-            Upload text file
-            <input type="file" id="assignmentFileInput" accept=".txt,.md" hidden>
-          </label>
-          <span id="assignmentFileStatus" class="hint"></span>
+        <div id="assignmentDropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload or drop assignment files">
+          <p class="dropzone-title">Drag files here, click to browse, or paste (Ctrl+V)</p>
+          <p class="hint">Images, PDF, DOCX, or TXT — up to 4 files, 3MB each</p>
+          <input type="file" id="assignmentFileInput" accept="image/*,.pdf,.docx,.txt,.md" multiple hidden>
         </div>
-        <div id="assignmentImagePreview" class="image-preview" hidden>
-          <img id="assignmentImagePreviewImg" alt="Preview of the uploaded assignment image">
-          <button type="button" id="removeImageBtn" class="btn btn-small btn-ghost">Remove image</button>
-        </div>
+        <p id="assignmentFileStatus" class="analyze-status" role="status" aria-live="polite"></p>
+        <div id="assignmentAttachmentList" class="attachment-list"></div>
 
         <label class="field-label" for="requirementsText" style="margin-top: 20px;">Teacher's requirements / grading criteria (optional)</label>
         <textarea id="requirementsText" class="assignment-input" rows="3" placeholder="e.g. Must cite at least 3 sources. APA format. Lose points for going over the time limit."></textarea>
@@ -95,22 +88,16 @@
           <span class="hint">Skills and availability help TeamFlow suggest fair owners</span>
         </div>
 
-        <div class="upload-row">
-          <label class="file-upload-btn">
-            Upload team image
-            <input type="file" id="teamImageInput" accept="image/*" hidden>
-          </label>
-          <label class="file-upload-btn">
-            Upload team file
-            <input type="file" id="teamFileInput" accept=".txt,.md" hidden>
-          </label>
+        <div id="teamDropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload or drop team roster files">
+          <p class="dropzone-title">Drag a roster/schedule file here, click to browse, or paste (Ctrl+V)</p>
+          <p class="hint">Images, PDF, DOCX, or TXT — up to 4 files, 3MB each</p>
+          <input type="file" id="teamFileInput" accept="image/*,.pdf,.docx,.txt,.md" multiple hidden>
+        </div>
+        <div class="google-actions" style="margin-top: 10px;">
           <button type="button" id="extractTeamBtn" class="btn btn-small btn-ghost" disabled>Fill team from upload</button>
         </div>
         <p id="teamFileStatus" class="analyze-status" role="status" aria-live="polite"></p>
-        <div id="teamImagePreview" class="image-preview" hidden>
-          <img id="teamImagePreviewImg" alt="Preview of the uploaded team roster image">
-          <button type="button" id="removeTeamImageBtn" class="btn btn-small btn-ghost">Remove image</button>
-        </div>
+        <div id="teamAttachmentList" class="attachment-list"></div>
 
         <div class="team-form-head" aria-hidden="true">
           <span>Name</span>
@@ -224,7 +211,7 @@
       <p>This is a course-project prototype. Here's exactly what happens to your data — no accounts, no hidden tracking.</p>
 
       <h3>Assignment text &amp; team info</h3>
-      <p>What you type into the assignment box and team form stays in your browser. When you click "Build a Team Plan," it's sent to a small server function to generate the task plan (using an AI model where one is configured, or a free local rule-based planner otherwise) — it isn't stored on any server or database afterward. If you upload an image of the assignment, or an image/file of your team (e.g. a roster or schedule screenshot), the same applies: it's sent to the AI model for that one request and then discarded, never saved to disk. Uploaded text files are read directly in your browser and never leave your device unless you click "Build a Team Plan" or "Fill team from upload."</p>
+      <p>What you type into the assignment box and team form stays in your browser. When you click "Build a Team Plan," it's sent to a small server function to generate the task plan (using an AI model where one is configured, or a free local rule-based planner otherwise) — it isn't stored on any server or database afterward. Uploaded images and PDFs are sent to the AI model the same way — for that one request, then discarded, never saved to disk. DOCX and TXT files are read and converted to text directly in your browser and never leave your device unless you click "Build a Team Plan" or "Fill team from upload."</p>
 
       <h3>Saved locally, on your device only</h3>
       <p>Your current plan is saved in this browser's local storage so it's still here next time you visit. It never leaves your device unless you explicitly export or sync it (see below). Clearing your browser data will remove it.</p>

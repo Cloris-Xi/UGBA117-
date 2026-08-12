@@ -27,18 +27,14 @@
 
   const assignmentTextEl = document.getElementById("assignmentText");
   const requirementsTextEl = document.getElementById("requirementsText");
-  const assignmentImageInput = document.getElementById("assignmentImageInput");
-  const assignmentFileInput = document.getElementById("assignmentFileInput");
+  const assignmentDropzoneEl = document.getElementById("assignmentDropzone");
+  const assignmentFileInputEl = document.getElementById("assignmentFileInput");
   const assignmentFileStatusEl = document.getElementById("assignmentFileStatus");
-  const assignmentImagePreviewEl = document.getElementById("assignmentImagePreview");
-  const assignmentImagePreviewImgEl = document.getElementById("assignmentImagePreviewImg");
-  const removeImageBtn = document.getElementById("removeImageBtn");
-  const teamImageInput = document.getElementById("teamImageInput");
-  const teamFileInput = document.getElementById("teamFileInput");
+  const assignmentAttachmentListEl = document.getElementById("assignmentAttachmentList");
+  const teamDropzoneEl = document.getElementById("teamDropzone");
+  const teamFileInputEl = document.getElementById("teamFileInput");
   const teamFileStatusEl = document.getElementById("teamFileStatus");
-  const teamImagePreviewEl = document.getElementById("teamImagePreview");
-  const teamImagePreviewImgEl = document.getElementById("teamImagePreviewImg");
-  const removeTeamImageBtn = document.getElementById("removeTeamImageBtn");
+  const teamAttachmentListEl = document.getElementById("teamAttachmentList");
   const extractTeamBtn = document.getElementById("extractTeamBtn");
   const teamFormEl = document.getElementById("teamForm");
   const analyzeBtn = document.getElementById("analyzeBtn");
@@ -49,14 +45,12 @@
   const workloadMsgEl = document.getElementById("workloadMsg");
   const riskListEl = document.getElementById("riskList");
 
-  const MAX_IMAGE_BYTES = 3 * 1024 * 1024; // 3MB raw — keeps the base64-encoded request comfortably under platform body-size limits
+  const MAX_IMAGE_BYTES = 3 * 1024 * 1024; // 3MB raw per file — keeps the base64-encoded request comfortably under platform body-size limits
 
   // ---- state -------------------------------------------------------
   let team = TEAM.map((m, i) => ({ ...m, skills: "", availability: "", email: "" }));
   let tasks = INITIAL_TASKS.map((t) => ({ ...t }));
   let assignmentInfo = null; // { deadline, deliverables, gradingCriteria } once AI has run
-  let assignmentImage = null; // { mediaType, data (base64), fileName } — session only, never persisted
-  let teamImage = null; // same shape, for the team-roster upload
   let teamUploadText = ""; // text pulled from an uploaded team file — session only
   let reminderPlanId = null; // set once automatic reminders are enabled
   let teamPlanCode = null; // set once this browser has created/joined a team-shared plan
@@ -571,7 +565,9 @@
   }
 
   // ---- build the plan: try the real AI function, fall back to the local planner -------------------------------------------------------
-  // ---- assignment file/image upload -------------------------------------------------------
+  // ---- unified file intake: click-to-browse, drag & drop, and paste all funnel through here -------------------------------------------------------
+  const MAX_ATTACHMENTS = 4;
+
   function readFileAsDataURL(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -590,124 +586,166 @@
     });
   }
 
-  if (assignmentImageInput) {
-    assignmentImageInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (!file.type.startsWith("image/")) {
-        assignmentFileStatusEl.textContent = "请上传图片文件(jpg / png 等)。";
-        assignmentFileStatusEl.classList.add("analyze-status-error");
-        return;
-      }
-      if (file.size > MAX_IMAGE_BYTES) {
-        assignmentFileStatusEl.textContent = "图片太大了,请上传 3MB 以内的图片(可以截图压缩一下)。";
-        assignmentFileStatusEl.classList.add("analyze-status-error");
-        return;
-      }
-      try {
-        const dataUrl = await readFileAsDataURL(file);
-        const match = dataUrl.match(/^data:(.*);base64,(.*)$/);
-        if (!match) throw new Error("图片格式无法识别");
-        assignmentImage = { mediaType: match[1], data: match[2], fileName: file.name };
-        assignmentImagePreviewImgEl.src = dataUrl;
-        assignmentImagePreviewEl.hidden = false;
-        assignmentFileStatusEl.classList.remove("analyze-status-error");
-        assignmentFileStatusEl.textContent = `已添加图片:${file.name}`;
-      } catch (err) {
-        assignmentFileStatusEl.textContent = "图片读取失败,请重试。";
-        assignmentFileStatusEl.classList.add("analyze-status-error");
-      }
-    });
+  const assignmentAttachState = { images: [], documents: [] };
+  const teamAttachState = { images: [], documents: [] };
+
+  function attachTargets(target) {
+    return target === "assignment"
+      ? { state: assignmentAttachState, statusEl: assignmentFileStatusEl, listEl: assignmentAttachmentListEl }
+      : { state: teamAttachState, statusEl: teamFileStatusEl, listEl: teamAttachmentListEl };
   }
 
-  if (removeImageBtn) {
-    removeImageBtn.addEventListener("click", () => {
-      assignmentImage = null;
-      assignmentImagePreviewEl.hidden = true;
-      assignmentImageInput.value = "";
-      assignmentFileStatusEl.textContent = "";
-    });
-  }
-
-  if (assignmentFileInput) {
-    assignmentFileInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const text = await readFileAsText(file);
-        assignmentTextEl.value = assignmentTextEl.value.trim() ? assignmentTextEl.value + "\n\n" + text : text;
-        saveState();
-        assignmentFileStatusEl.classList.remove("analyze-status-error");
-        assignmentFileStatusEl.textContent = `已导入文件内容:${file.name}`;
-      } catch (err) {
-        assignmentFileStatusEl.textContent = "文件读取失败,请重试。";
-        assignmentFileStatusEl.classList.add("analyze-status-error");
-      } finally {
-        assignmentFileInput.value = "";
-      }
-    });
-  }
-
-  // ---- team-roster upload (fills the whole team from an image/file) -------------------------------------------------------
   function updateExtractTeamBtnState() {
-    if (extractTeamBtn) extractTeamBtn.disabled = !teamImage && !teamUploadText;
+    if (extractTeamBtn) {
+      extractTeamBtn.disabled = !(teamAttachState.images.length || teamAttachState.documents.length || teamUploadText);
+    }
   }
 
-  if (teamImageInput) {
-    teamImageInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (!file.type.startsWith("image/")) {
-        teamFileStatusEl.textContent = "请上传图片文件(jpg / png 等)。";
-        teamFileStatusEl.classList.add("analyze-status-error");
+  function appendTextTo(target, text) {
+    if (target === "assignment") {
+      assignmentTextEl.value = assignmentTextEl.value.trim() ? assignmentTextEl.value + "\n\n" + text : text;
+      saveState();
+    } else {
+      teamUploadText = teamUploadText ? teamUploadText + "\n\n" + text : text;
+      updateExtractTeamBtnState();
+    }
+  }
+
+  function renderAttachments(target) {
+    const { state, listEl } = attachTargets(target);
+    const items = [
+      ...state.images.map((img, i) => ({ kind: "image", index: i, name: img.fileName, dataUrl: `data:${img.mediaType};base64,${img.data}` })),
+      ...state.documents.map((doc, i) => ({ kind: "document", index: i, name: doc.fileName })),
+    ];
+
+    listEl.innerHTML = items
+      .map(
+        (item) => `
+        <div class="attachment-chip">
+          ${item.kind === "image" ? `<img src="${item.dataUrl}" alt="">` : `<span class="attachment-file-icon">PDF</span>`}
+          <span class="attachment-name">${item.name}</span>
+          <button type="button" class="attachment-remove" data-kind="${item.kind}" data-index="${item.index}" aria-label="Remove ${item.name}">&times;</button>
+        </div>`
+      )
+      .join("");
+
+    listEl.querySelectorAll(".attachment-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const kind = btn.dataset.kind;
+        const idx = Number(btn.dataset.index);
+        if (kind === "image") state.images.splice(idx, 1);
+        else state.documents.splice(idx, 1);
+        renderAttachments(target);
+      });
+    });
+
+    if (target === "team") updateExtractTeamBtnState();
+  }
+
+  async function processOneFile(file, target) {
+    const { state, statusEl } = attachTargets(target);
+    const lowerName = file.name.toLowerCase();
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf" || lowerName.endsWith(".pdf");
+    const isDocx = lowerName.endsWith(".docx");
+    const isTextLike = file.type.startsWith("text/") || lowerName.endsWith(".txt") || lowerName.endsWith(".md");
+
+    if (isImage || isPdf) {
+      if (state.images.length + state.documents.length >= MAX_ATTACHMENTS) {
+        statusEl.textContent = `最多只能加 ${MAX_ATTACHMENTS} 个文件,"${file.name}"没有添加。`;
+        statusEl.classList.add("analyze-status-error");
         return;
       }
       if (file.size > MAX_IMAGE_BYTES) {
-        teamFileStatusEl.textContent = "图片太大了,请上传 3MB 以内的图片。";
-        teamFileStatusEl.classList.add("analyze-status-error");
+        statusEl.textContent = `"${file.name}" 太大了,请上传 3MB 以内的文件。`;
+        statusEl.classList.add("analyze-status-error");
         return;
       }
-      try {
+    }
+
+    try {
+      if (isImage) {
         const dataUrl = await readFileAsDataURL(file);
         const match = dataUrl.match(/^data:(.*);base64,(.*)$/);
         if (!match) throw new Error("图片格式无法识别");
-        teamImage = { mediaType: match[1], data: match[2], fileName: file.name };
-        teamImagePreviewImgEl.src = dataUrl;
-        teamImagePreviewEl.hidden = false;
-        teamFileStatusEl.classList.remove("analyze-status-error");
-        teamFileStatusEl.textContent = `已添加图片:${file.name} — 点"Fill team from upload"识别`;
-        updateExtractTeamBtnState();
-      } catch (err) {
-        teamFileStatusEl.textContent = "图片读取失败,请重试。";
-        teamFileStatusEl.classList.add("analyze-status-error");
+        state.images.push({ mediaType: match[1], data: match[2], fileName: file.name });
+        renderAttachments(target);
+        statusEl.classList.remove("analyze-status-error");
+        statusEl.textContent = `已添加图片:${file.name}`;
+      } else if (isPdf) {
+        const dataUrl = await readFileAsDataURL(file);
+        const match = dataUrl.match(/^data:(.*);base64,(.*)$/);
+        if (!match) throw new Error("PDF 格式无法识别");
+        state.documents.push({ mediaType: "application/pdf", data: match[2], fileName: file.name });
+        renderAttachments(target);
+        statusEl.classList.remove("analyze-status-error");
+        statusEl.textContent = `已添加 PDF:${file.name}`;
+      } else if (isDocx) {
+        if (typeof mammoth === "undefined") throw new Error("DOCX 解析组件加载失败,请刷新页面重试");
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        appendTextTo(target, result.value);
+        statusEl.classList.remove("analyze-status-error");
+        statusEl.textContent = `已从 ${file.name} 提取文字内容。`;
+      } else if (isTextLike) {
+        const text = await readFileAsText(file);
+        appendTextTo(target, text);
+        statusEl.classList.remove("analyze-status-error");
+        statusEl.textContent = `已导入 ${file.name} 的文字内容。`;
+      } else {
+        statusEl.textContent = `不支持的文件类型:${file.name}(支持图片、PDF、DOCX、TXT)。`;
+        statusEl.classList.add("analyze-status-error");
+      }
+    } catch (err) {
+      statusEl.textContent = `处理 "${file.name}" 失败,请重试。`;
+      statusEl.classList.add("analyze-status-error");
+    }
+  }
+
+  function handleIncomingFiles(fileList, target) {
+    Array.from(fileList || []).forEach((file) => processOneFile(file, target));
+  }
+
+  function wireDropzone(dropzoneEl, fileInputEl, target) {
+    if (!dropzoneEl || !fileInputEl) return;
+
+    dropzoneEl.addEventListener("click", () => fileInputEl.click());
+    dropzoneEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        fileInputEl.click();
       }
     });
-  }
-
-  if (removeTeamImageBtn) {
-    removeTeamImageBtn.addEventListener("click", () => {
-      teamImage = null;
-      teamImagePreviewEl.hidden = true;
-      teamImageInput.value = "";
-      teamFileStatusEl.textContent = "";
-      updateExtractTeamBtnState();
+    dropzoneEl.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzoneEl.classList.add("dropzone-active");
+    });
+    dropzoneEl.addEventListener("dragleave", () => dropzoneEl.classList.remove("dropzone-active"));
+    dropzoneEl.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzoneEl.classList.remove("dropzone-active");
+      handleIncomingFiles(e.dataTransfer.files, target);
+    });
+    dropzoneEl.addEventListener("paste", (e) => {
+      if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length) {
+        e.preventDefault();
+        handleIncomingFiles(e.clipboardData.files, target);
+      }
+    });
+    fileInputEl.addEventListener("change", (e) => {
+      handleIncomingFiles(e.target.files, target);
+      fileInputEl.value = "";
     });
   }
 
-  if (teamFileInput) {
-    teamFileInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        teamUploadText = await readFileAsText(file);
-        teamFileStatusEl.classList.remove("analyze-status-error");
-        teamFileStatusEl.textContent = `已添加文件:${file.name} — 点"Fill team from upload"识别`;
-        updateExtractTeamBtnState();
-      } catch (err) {
-        teamFileStatusEl.textContent = "文件读取失败,请重试。";
-        teamFileStatusEl.classList.add("analyze-status-error");
-      } finally {
-        teamFileInput.value = "";
+  wireDropzone(assignmentDropzoneEl, assignmentFileInputEl, "assignment");
+  wireDropzone(teamDropzoneEl, teamFileInputEl, "team");
+  // Pasting into the assignment textarea itself should also pick up images/files.
+  if (assignmentTextEl) {
+    assignmentTextEl.addEventListener("paste", (e) => {
+      if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length) {
+        e.preventDefault();
+        handleIncomingFiles(e.clipboardData.files, "assignment");
       }
     });
   }
@@ -729,14 +767,18 @@
   }
 
   async function extractTeamFromUpload() {
-    if (!teamImage && !teamUploadText) return;
+    if (!teamAttachState.images.length && !teamAttachState.documents.length && !teamUploadText) return;
 
     extractTeamBtn.disabled = true;
     extractTeamBtn.textContent = "Reading…";
     teamFileStatusEl.classList.remove("analyze-status-error");
     teamFileStatusEl.textContent = "TeamFlow is reading the upload…";
 
-    const requestBody = JSON.stringify({ teamText: teamUploadText, teamImage });
+    const requestBody = JSON.stringify({
+      teamText: teamUploadText,
+      teamImages: teamAttachState.images,
+      teamDocuments: teamAttachState.documents,
+    });
     let handled = false;
 
     for (const endpoint of ["/api/extract-team", "/.netlify/functions/extract-team"]) {
@@ -784,8 +826,9 @@
       .filter(Boolean)
       .join("\n\n");
 
-    if (combinedText.length < 15 && !assignmentImage) {
-      analyzeStatusEl.textContent = "请多写一点作业说明,或者上传一张图片/文件。";
+    const hasAttachments = assignmentAttachState.images.length > 0 || assignmentAttachState.documents.length > 0;
+    if (combinedText.length < 15 && !hasAttachments) {
+      analyzeStatusEl.textContent = "请多写一点作业说明,或者上传图片/文件。";
       analyzeStatusEl.classList.add("analyze-status-error");
       return;
     }
@@ -805,7 +848,8 @@
 
     const requestBody = JSON.stringify({
       assignmentText: combinedText,
-      assignmentImage,
+      assignmentImages: assignmentAttachState.images,
+      assignmentDocuments: assignmentAttachState.documents,
       teamMembers: activeMembers.map((m) => ({ name: m.name, skills: m.skills, availability: m.availability })),
     });
 
@@ -867,7 +911,7 @@
     renderWorkload();
     renderRiskPanel();
     saveState();
-    if (usedFallback && assignmentImage && combinedText.trim().length < 15) {
+    if (usedFallback && hasAttachments && combinedText.trim().length < 15) {
       analyzeStatusEl.textContent = "免费本地版无法识别图片内容,先生成了一个通用模板 — 配置 API key 后可以真正读图分析。";
       analyzeStatusEl.classList.add("analyze-status-error");
     } else {

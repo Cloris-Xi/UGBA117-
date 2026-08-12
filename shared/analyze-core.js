@@ -38,13 +38,15 @@ Respond with STRICT JSON only, no markdown fences, no commentary, in exactly thi
 }`;
 
 async function runAnalysis(payload) {
-  const { assignmentText, assignmentImage, teamMembers } = payload || {};
+  const { assignmentText, assignmentImages, assignmentDocuments, teamMembers } = payload || {};
 
+  const images = Array.isArray(assignmentImages) ? assignmentImages.filter((i) => i && i.data && i.mediaType) : [];
+  const documents = Array.isArray(assignmentDocuments) ? assignmentDocuments.filter((d) => d && d.data && d.mediaType) : [];
   const hasText = !!(assignmentText && assignmentText.trim().length >= 15);
-  const hasImage = !!(assignmentImage && assignmentImage.data && assignmentImage.mediaType);
+  const hasAttachments = images.length > 0 || documents.length > 0;
 
-  if (!hasText && !hasImage) {
-    return { status: 400, body: { error: "请粘贴完整一些的作业说明(至少一两句话),或者上传一张图片。" } };
+  if (!hasText && !hasAttachments) {
+    return { status: 400, body: { error: "请粘贴完整一些的作业说明(至少一两句话),或者上传图片/文件。" } };
   }
   if (!Array.isArray(teamMembers) || teamMembers.length === 0) {
     return { status: 400, body: { error: "请至少填写一位团队成员。" } };
@@ -62,17 +64,17 @@ async function runAnalysis(payload) {
     .map((m) => `- ${m.name}: skills = ${m.skills || "not specified"}; availability = ${m.availability || "not specified"}`)
     .join("\n");
 
-  const textPrompt = `ASSIGNMENT DESCRIPTION${hasImage ? " (an image is also attached — read both)" : ""}:\n${
-    assignmentText && assignmentText.trim() ? assignmentText : "(see attached image)"
+  const textPrompt = `ASSIGNMENT DESCRIPTION${hasAttachments ? " (attached files/images are also part of the assignment — read all of them)" : ""}:\n${
+    assignmentText && assignmentText.trim() ? assignmentText : "(see attached files/images)"
   }\n\nTEAM MEMBERS:\n${teamDescription}`;
 
   const userContent = [];
-  if (hasImage) {
-    userContent.push({
-      type: "image",
-      source: { type: "base64", media_type: assignmentImage.mediaType, data: assignmentImage.data },
-    });
-  }
+  images.forEach((img) => {
+    userContent.push({ type: "image", source: { type: "base64", media_type: img.mediaType, data: img.data } });
+  });
+  documents.forEach((doc) => {
+    userContent.push({ type: "document", source: { type: "base64", media_type: doc.mediaType, data: doc.data } });
+  });
   userContent.push({ type: "text", text: textPrompt });
 
   try {
