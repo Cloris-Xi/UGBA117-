@@ -43,11 +43,37 @@
           <h3>Step 1 — Your assignment</h3>
         </div>
         <label class="field-label" for="assignmentText">Paste the assignment description</label>
-        <textarea id="assignmentText" class="assignment-input" rows="5" placeholder="e.g. Prepare a 20-minute group presentation on a case study of your choice. Due in two weeks. Grading: content depth (40%), analysis (30%), delivery (30%)..."></textarea>
+        <textarea id="assignmentText" class="assignment-input" rows="5" placeholder="e.g. Prepare a 20-minute group presentation on a case study of your choice. Due in two weeks..."></textarea>
+
+        <div class="upload-row">
+          <label class="file-upload-btn">
+            Upload image
+            <input type="file" id="assignmentImageInput" accept="image/*" hidden>
+          </label>
+          <label class="file-upload-btn">
+            Upload text file
+            <input type="file" id="assignmentFileInput" accept=".txt,.md" hidden>
+          </label>
+          <span id="assignmentFileStatus" class="hint"></span>
+        </div>
+        <div id="assignmentImagePreview" class="image-preview" hidden>
+          <img id="assignmentImagePreviewImg" alt="Preview of the uploaded assignment image">
+          <button type="button" id="removeImageBtn" class="btn btn-small btn-ghost">Remove image</button>
+        </div>
+
+        <label class="field-label" for="requirementsText" style="margin-top: 20px;">Teacher's requirements / grading criteria (optional)</label>
+        <textarea id="requirementsText" class="assignment-input" rows="3" placeholder="e.g. Must cite at least 3 sources. APA format. Lose points for going over the time limit."></textarea>
 
         <div class="card-head" style="margin-top: 24px;">
           <h3>Step 2 — Your team</h3>
           <span class="hint">Skills and availability help TeamFlow suggest fair owners</span>
+        </div>
+        <div class="team-form-head" aria-hidden="true">
+          <span>Name</span>
+          <span>Email</span>
+          <span>Skills</span>
+          <span>Availability</span>
+          <span></span>
         </div>
         <div id="teamForm" class="team-form"></div>
         <button type="button" id="addMemberBtn" class="btn btn-small btn-ghost add-member-btn">+ Add member</button>
@@ -127,7 +153,7 @@
       <p>This is a course-project prototype. Here's exactly what happens to your data — no accounts, no hidden tracking.</p>
 
       <h3>Assignment text &amp; team info</h3>
-      <p>What you type into the assignment box and team form stays in your browser. When you click "Build a Team Plan," it's sent to a small server function to generate the task plan (using an AI model where one is configured, or a free local rule-based planner otherwise) — it isn't stored on any server or database afterward.</p>
+      <p>What you type into the assignment box and team form stays in your browser. When you click "Build a Team Plan," it's sent to a small server function to generate the task plan (using an AI model where one is configured, or a free local rule-based planner otherwise) — it isn't stored on any server or database afterward. If you upload an image of the assignment, the same applies: it's sent to the AI model for that one request and then discarded, never saved to disk. Uploaded text files are read directly in your browser and never leave your device unless you click "Build a Team Plan."</p>
 
       <h3>Saved locally, on your device only</h3>
       <p>Your current plan is saved in this browser's local storage so it's still here next time you visit. It never leaves your device unless you explicitly export or sync it (see below). Clearing your browser data will remove it.</p>

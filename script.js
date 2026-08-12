@@ -26,6 +26,13 @@
   const COLOR_PALETTE = ["#E7B94A", "#5F7A5E", "#B3514A", "#7C8FA6", "#9B7EDE", "#4C9F9F"];
 
   const assignmentTextEl = document.getElementById("assignmentText");
+  const requirementsTextEl = document.getElementById("requirementsText");
+  const assignmentImageInput = document.getElementById("assignmentImageInput");
+  const assignmentFileInput = document.getElementById("assignmentFileInput");
+  const assignmentFileStatusEl = document.getElementById("assignmentFileStatus");
+  const assignmentImagePreviewEl = document.getElementById("assignmentImagePreview");
+  const assignmentImagePreviewImgEl = document.getElementById("assignmentImagePreviewImg");
+  const removeImageBtn = document.getElementById("removeImageBtn");
   const teamFormEl = document.getElementById("teamForm");
   const analyzeBtn = document.getElementById("analyzeBtn");
   const analyzeStatusEl = document.getElementById("analyzeStatus");
@@ -35,10 +42,13 @@
   const workloadMsgEl = document.getElementById("workloadMsg");
   const riskListEl = document.getElementById("riskList");
 
+  const MAX_IMAGE_BYTES = 3 * 1024 * 1024; // 3MB raw — keeps the base64-encoded request comfortably under platform body-size limits
+
   // ---- state -------------------------------------------------------
   let team = TEAM.map((m, i) => ({ ...m, skills: "", availability: "", email: "" }));
   let tasks = INITIAL_TASKS.map((t) => ({ ...t }));
   let assignmentInfo = null; // { deadline, deliverables, gradingCriteria } once AI has run
+  let assignmentImage = null; // { mediaType, data (base64), fileName } — session only, never persisted
 
   const statusOrder = ["todo", "progress", "done"];
   const statusLabel = { todo: "To do", progress: "In progress", done: "Done" };
@@ -50,6 +60,7 @@
         STORAGE_KEY,
         JSON.stringify({
           assignmentText: assignmentTextEl.value,
+          requirementsText: requirementsTextEl ? requirementsTextEl.value : "",
           team,
           tasks,
           assignmentInfo,
@@ -71,6 +82,7 @@
     if (saved.team && saved.team.length) team = saved.team;
     if (saved.tasks && saved.tasks.length) tasks = saved.tasks;
     if (saved.assignmentText) assignmentTextEl.value = saved.assignmentText;
+    if (saved.requirementsText && requirementsTextEl) requirementsTextEl.value = saved.requirementsText;
     if (saved.assignmentInfo) assignmentInfo = saved.assignmentInfo;
     return true;
   }
@@ -509,10 +521,95 @@
   }
 
   // ---- build the plan: try the real AI function, fall back to the local planner -------------------------------------------------------
+  // ---- assignment file/image upload -------------------------------------------------------
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("读取文件失败"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("读取文件失败"));
+      reader.readAsText(file);
+    });
+  }
+
+  if (assignmentImageInput) {
+    assignmentImageInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        assignmentFileStatusEl.textContent = "请上传图片文件(jpg / png 等)。";
+        assignmentFileStatusEl.classList.add("analyze-status-error");
+        return;
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        assignmentFileStatusEl.textContent = "图片太大了,请上传 3MB 以内的图片(可以截图压缩一下)。";
+        assignmentFileStatusEl.classList.add("analyze-status-error");
+        return;
+      }
+      try {
+        const dataUrl = await readFileAsDataURL(file);
+        const match = dataUrl.match(/^data:(.*);base64,(.*)$/);
+        if (!match) throw new Error("图片格式无法识别");
+        assignmentImage = { mediaType: match[1], data: match[2], fileName: file.name };
+        assignmentImagePreviewImgEl.src = dataUrl;
+        assignmentImagePreviewEl.hidden = false;
+        assignmentFileStatusEl.classList.remove("analyze-status-error");
+        assignmentFileStatusEl.textContent = `已添加图片:${file.name}`;
+      } catch (err) {
+        assignmentFileStatusEl.textContent = "图片读取失败,请重试。";
+        assignmentFileStatusEl.classList.add("analyze-status-error");
+      }
+    });
+  }
+
+  if (removeImageBtn) {
+    removeImageBtn.addEventListener("click", () => {
+      assignmentImage = null;
+      assignmentImagePreviewEl.hidden = true;
+      assignmentImageInput.value = "";
+      assignmentFileStatusEl.textContent = "";
+    });
+  }
+
+  if (assignmentFileInput) {
+    assignmentFileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await readFileAsText(file);
+        assignmentTextEl.value = assignmentTextEl.value.trim() ? assignmentTextEl.value + "\n\n" + text : text;
+        saveState();
+        assignmentFileStatusEl.classList.remove("analyze-status-error");
+        assignmentFileStatusEl.textContent = `已导入文件内容:${file.name}`;
+      } catch (err) {
+        assignmentFileStatusEl.textContent = "文件读取失败,请重试。";
+        assignmentFileStatusEl.classList.add("analyze-status-error");
+      } finally {
+        assignmentFileInput.value = "";
+      }
+    });
+  }
+
   async function buildTeamPlan() {
-    const assignmentText = assignmentTextEl.value.trim();
-    if (assignmentText.length < 15) {
-      analyzeStatusEl.textContent = "请多写一点作业说明,方便生成更准确的计划。";
+    const rawAssignmentText = assignmentTextEl.value.trim();
+    const requirementsText = requirementsTextEl ? requirementsTextEl.value.trim() : "";
+    const combinedText = [
+      rawAssignmentText,
+      requirementsText ? "Teacher's requirements / grading criteria:\n" + requirementsText : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (combinedText.length < 15 && !assignmentImage) {
+      analyzeStatusEl.textContent = "请多写一点作业说明,或者上传一张图片/文件。";
       analyzeStatusEl.classList.add("analyze-status-error");
       return;
     }
@@ -531,7 +628,8 @@
     let result = null;
 
     const requestBody = JSON.stringify({
-      assignmentText,
+      assignmentText: combinedText,
+      assignmentImage,
       teamMembers: activeMembers.map((m) => ({ name: m.name, skills: m.skills, availability: m.availability })),
     });
 
@@ -559,7 +657,7 @@
 
     const usedFallback = !result;
     if (!result) {
-      result = generatePlanLocally(assignmentText, activeMembers);
+      result = generatePlanLocally(combinedText, activeMembers);
     }
 
     assignmentInfo = {
@@ -586,15 +684,22 @@
     renderWorkload();
     renderRiskPanel();
     saveState();
-    analyzeStatusEl.textContent = usedFallback
-      ? "Plan ready — using the built-in quick planner. Add an API key later for smarter, fully AI-generated plans."
-      : "Plan ready — review it below, then adjust owners or status as needed.";
+    if (usedFallback && assignmentImage && combinedText.trim().length < 15) {
+      analyzeStatusEl.textContent = "免费本地版无法识别图片内容,先生成了一个通用模板 — 配置 API key 后可以真正读图分析。";
+      analyzeStatusEl.classList.add("analyze-status-error");
+    } else {
+      analyzeStatusEl.classList.remove("analyze-status-error");
+      analyzeStatusEl.textContent = usedFallback
+        ? "Plan ready — using the built-in quick planner. Add an API key later for smarter, fully AI-generated plans."
+        : "Plan ready — review it below, then adjust owners or status as needed.";
+    }
     analyzeBtn.disabled = false;
     analyzeBtn.textContent = "Build a Team Plan";
   }
 
   if (analyzeBtn) analyzeBtn.addEventListener("click", buildTeamPlan);
   if (assignmentTextEl) assignmentTextEl.addEventListener("input", saveState);
+  if (requirementsTextEl) requirementsTextEl.addEventListener("input", saveState);
 
   // -----------------------------------------------------------------------
   // INTEGRATION STUBS — where real Google Sheets / Google Calendar

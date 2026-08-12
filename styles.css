@@ -517,6 +517,57 @@ button { font-family: inherit; cursor: pointer; }
 }
 .assignment-input:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 
+.upload-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.file-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.6em 1.1em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.file-upload-btn:hover { background: var(--surface-2); }
+
+.image-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 4px 0 12px;
+  padding: 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+.image-preview img {
+  max-width: 140px;
+  max-height: 100px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  object-fit: cover;
+}
+
+.team-form-head {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr 1fr auto;
+  gap: 10px;
+  padding: 0 2px;
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 640px) {
+  .team-form-head { display: none; }
+}
+
 .team-form { display: flex; flex-direction: column; gap: 10px; }
 .team-row {
   display: grid;
@@ -652,14 +703,19 @@ button { font-family: inherit; cursor: pointer; }
    MVP
    ========================================================================== */
 .mvp { padding: 80px 0; border-top: 1px solid var(--line); background: var(--surface-2); }
-.mvp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
 .mvp-col {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  padding: 28px;
+  padding: 32px;
 }
+.mvp-solo { max-width: 720px; margin: 0 auto; }
 .check-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.check-list-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
 .check-list li {
   position: relative;
   padding-left: 28px;
@@ -676,13 +732,8 @@ button { font-family: inherit; cursor: pointer; }
   border: 1.5px solid var(--good);
   background: var(--good-soft);
 }
-.check-list-future li::before {
-  border-color: var(--ink-faint);
-  background: transparent;
-}
-.check-list-future li { color: var(--ink-soft); }
 
-@media (max-width: 780px) { .mvp-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .check-list-grid { grid-template-columns: 1fr; } }
 
 /* ==========================================================================
    FINAL CTA

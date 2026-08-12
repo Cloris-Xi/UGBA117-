@@ -3,16 +3,22 @@
 // Used by both netlify/functions/analyze-assignment.js (Netlify) and
 // api/analyze-assignment.js (Vercel) so the two platforms stay in sync.
 //
-// Body: { assignmentText: string, teamMembers: [{ name, skills, availability }] }
+// Body: {
+//   assignmentText: string,
+//   assignmentImage?: { mediaType: string, data: string (base64, no data: prefix) },
+//   teamMembers: [{ name, skills, availability }]
+// }
 // Returns: { status, body } where body is the JSON payload to send back.
 //
 // Requires an ANTHROPIC_API_KEY environment variable set in the hosting
 // platform's project settings. The key is only ever read on the server
-// side here — it is never sent to the browser.
+// side here — it is never sent to the browser. Neither the assignment
+// text nor the image are stored anywhere — they're forwarded to the AI
+// model for this one request and then discarded.
 // -----------------------------------------------------------------------
 
 const SYSTEM_PROMPT = `You are TeamFlow's assignment-analysis assistant for college group projects.
-Read the assignment description and:
+The assignment may be given as text, as an image (a photo or screenshot of a printed, handwritten, or on-screen brief), or both — read whichever is present.
 1. Identify the deadline (as stated or implied).
 2. List the required deliverables.
 3. List the grading criteria if mentioned.
@@ -30,10 +36,13 @@ Respond with STRICT JSON only, no markdown fences, no commentary, in exactly thi
 }`;
 
 async function runAnalysis(payload) {
-  const { assignmentText, teamMembers } = payload || {};
+  const { assignmentText, assignmentImage, teamMembers } = payload || {};
 
-  if (!assignmentText || assignmentText.trim().length < 15) {
-    return { status: 400, body: { error: "请粘贴完整一些的作业说明(至少一两句话)。" } };
+  const hasText = !!(assignmentText && assignmentText.trim().length >= 15);
+  const hasImage = !!(assignmentImage && assignmentImage.data && assignmentImage.mediaType);
+
+  if (!hasText && !hasImage) {
+    return { status: 400, body: { error: "请粘贴完整一些的作业说明(至少一两句话),或者上传一张图片。" } };
   }
   if (!Array.isArray(teamMembers) || teamMembers.length === 0) {
     return { status: 400, body: { error: "请至少填写一位团队成员。" } };
@@ -51,7 +60,18 @@ async function runAnalysis(payload) {
     .map((m) => `- ${m.name}: skills = ${m.skills || "not specified"}; availability = ${m.availability || "not specified"}`)
     .join("\n");
 
-  const userMessage = `ASSIGNMENT DESCRIPTION:\n${assignmentText}\n\nTEAM MEMBERS:\n${teamDescription}`;
+  const textPrompt = `ASSIGNMENT DESCRIPTION${hasImage ? " (an image is also attached — read both)" : ""}:\n${
+    assignmentText && assignmentText.trim() ? assignmentText : "(see attached image)"
+  }\n\nTEAM MEMBERS:\n${teamDescription}`;
+
+  const userContent = [];
+  if (hasImage) {
+    userContent.push({
+      type: "image",
+      source: { type: "base64", media_type: assignmentImage.mediaType, data: assignmentImage.data },
+    });
+  }
+  userContent.push({ type: "text", text: textPrompt });
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -65,7 +85,7 @@ async function runAnalysis(payload) {
         model: "claude-sonnet-5",
         max_tokens: 3000,
         system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userMessage }],
+        messages: [{ role: "user", content: userContent }],
       }),
     });
 
