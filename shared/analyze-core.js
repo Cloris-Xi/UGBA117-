@@ -24,6 +24,7 @@ The assignment may be given as text, as an image (a photo or screenshot of a pri
 3. List the grading criteria if mentioned.
 4. Break the work into 4-8 concrete, specific tasks.
 5. For each task, suggest one owner from the given team members, and estimate the hours it will take, aiming to keep total hours roughly balanced across members. Use each member's stated skills and availability as a factor, not the only factor.
+6. Based on the team members' stated availability, suggest one meeting time (or general time window, e.g. "weekday evenings" if no specific times are given) that would work well for the team, and briefly explain your reasoning.
 
 Respond with STRICT JSON only, no markdown fences, no commentary, in exactly this shape:
 {
@@ -32,7 +33,8 @@ Respond with STRICT JSON only, no markdown fences, no commentary, in exactly thi
   "gradingCriteria": ["string", "..."],
   "tasks": [
     { "name": "string", "owner": "member name", "hours": number, "due": "string" }
-  ]
+  ],
+  "suggestedMeeting": { "time": "string", "reason": "string" }
 }`;
 
 async function runAnalysis(payload) {

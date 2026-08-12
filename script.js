@@ -365,6 +365,13 @@
                 .join("")}</ul>`
             : ""
         }
+        ${
+          assignmentInfo.suggestedMeeting && assignmentInfo.suggestedMeeting.time
+            ? `<p class="summary-label">Suggested meeting time</p><p class="summary-line">${assignmentInfo.suggestedMeeting.time}${
+                assignmentInfo.suggestedMeeting.reason ? ` — ${assignmentInfo.suggestedMeeting.reason}` : ""
+              }</p>`
+            : ""
+        }
       </div>`;
   }
 
@@ -468,6 +475,30 @@
     });
   }
 
+  // Free-tier equivalent of the AI's meeting suggestion: looks for a
+  // time-of-day/week keyword that shows up in at least half the team's
+  // stated availability, in English or Chinese. No real understanding of
+  // schedules — just keyword overlap.
+  function suggestMeetingLocally(members) {
+    const keywords = [
+      "evening", "morning", "afternoon", "weekend", "weekday", "night",
+      "晚上", "下午", "早上", "上午", "周末", "周中", "晚间",
+    ];
+    const counts = {};
+    members.forEach((m) => {
+      const av = (m.availability || "").toLowerCase();
+      keywords.forEach((k) => {
+        if (av.includes(k.toLowerCase())) counts[k] = (counts[k] || 0) + 1;
+      });
+    });
+    const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    const threshold = Math.ceil(members.length / 2);
+    if (best && best[1] >= threshold) {
+      return { time: best[0], reason: `${best[1]} of ${members.length} team members mentioned this` };
+    }
+    return { time: "TBD", reason: "Not enough overlapping availability info — confirm a time with your team directly." };
+  }
+
   function generatePlanLocally(assignmentText, members) {
     const type = detectAssignmentType(assignmentText);
     return {
@@ -475,6 +506,7 @@
       deliverables: deliverablesForType(type),
       gradingCriteria: extractGradingCriteriaLocally(assignmentText),
       tasks: assignOwnersBalanced(taskTemplateForType(type), members),
+      suggestedMeeting: suggestMeetingLocally(members),
     };
   }
 
@@ -781,7 +813,13 @@
         if (response.status === 404) continue; // this platform doesn't have this endpoint, try the next one
         const data = await response.json();
         if (response.ok) {
-          result = { deadline: data.deadline, deliverables: data.deliverables || [], gradingCriteria: data.gradingCriteria || [], tasks: data.tasks || [] };
+          result = {
+            deadline: data.deadline,
+            deliverables: data.deliverables || [],
+            gradingCriteria: data.gradingCriteria || [],
+            tasks: data.tasks || [],
+            suggestedMeeting: data.suggestedMeeting || null,
+          };
         }
         // Any other non-OK response (e.g. no API key configured yet) falls through to the local planner below.
         break;
@@ -799,6 +837,7 @@
       deadline: result.deadline,
       deliverables: result.deliverables,
       gradingCriteria: result.gradingCriteria,
+      suggestedMeeting: result.suggestedMeeting || null,
     };
 
     const rawTasks = result.tasks.map((t, i) => ({
@@ -861,6 +900,7 @@
   const googleConnectBtn = document.getElementById("googleConnectBtn");
   const saveSheetsBtn = document.getElementById("saveSheetsBtn");
   const addCalendarBtn = document.getElementById("addCalendarBtn");
+  const sendReminderBtn = document.getElementById("sendReminderBtn");
   const googleStatusEl = document.getElementById("googleStatus");
 
   function googleConfigured() {
@@ -871,7 +911,7 @@
     if (!googleConfigured() || typeof google === "undefined" || !google.accounts) return;
     googleTokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
-      scope: "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.events",
+      scope: "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/gmail.send",
       callback: (response) => {
         if (response.error) {
           googleStatusEl.textContent = "Google 授权失败,请重试。";
@@ -883,8 +923,9 @@
         googleConnectBtn.disabled = true;
         saveSheetsBtn.disabled = false;
         addCalendarBtn.disabled = false;
+        sendReminderBtn.disabled = false;
         googleStatusEl.classList.remove("analyze-status-error");
-        googleStatusEl.textContent = "Google connected — you can now save to Sheets or add to Calendar.";
+        googleStatusEl.textContent = "Google connected — you can now save to Sheets, add to Calendar, or send a reminder email.";
       },
     });
   }
@@ -953,40 +994,61 @@
     googleStatusEl.classList.remove("analyze-status-error");
 
     try {
-      // NOTE: this is a best-effort date — assignmentInfo.deadline is free
-      // text (e.g. "2 weeks from today" or an AI-extracted phrase), not a
-      // reliable calendar date. Real date parsing would be a good next
-      // upgrade; for now this schedules 14 days out as a placeholder and
-      // puts the actual wording in the event title so nothing is lost.
-      const eventDate = new Date();
-      eventDate.setDate(eventDate.getDate() + 14);
-      const dateStr = eventDate.toISOString().slice(0, 10);
-
-      // Anyone who filled in a valid-looking email gets invited to this
-      // event — Google will email them and add it to their own calendar
+      // Anyone who filled in a valid-looking email gets invited to these
+      // events — Google will email them and add it to their own calendar
       // once they accept. Members without an email just won't get one.
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const attendees = team.filter((m) => m.email && emailPattern.test(m.email.trim())).map((m) => ({ email: m.email.trim() }));
 
-      const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${googleAccessToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          summary: "Assignment deadline — " + (assignmentInfo && assignmentInfo.deadline ? assignmentInfo.deadline : "TeamFlow plan"),
-          description: "Added by TeamFlow. Double-check this date against the real assignment deadline.",
-          start: { date: dateStr },
-          end: { date: dateStr },
-          attendees,
-        }),
+      // NOTE: both dates below are best-effort placeholders — the AI gives
+      // free-text descriptions (e.g. "2 weeks from today", "weekday
+      // evenings"), not reliable calendar dates. Real date/time parsing
+      // would be a good next upgrade; for now the actual wording is put in
+      // the event title/description so nothing is lost, and the placeholder
+      // date just gives you something to drag to the right spot.
+      const events = [];
+
+      const deadlineDate = new Date();
+      deadlineDate.setDate(deadlineDate.getDate() + 14);
+      events.push({
+        summary: "Assignment deadline — " + (assignmentInfo && assignmentInfo.deadline ? assignmentInfo.deadline : "TeamFlow plan"),
+        description: "Added by TeamFlow. Double-check this date against the real assignment deadline.",
+        start: { date: deadlineDate.toISOString().slice(0, 10) },
+        end: { date: deadlineDate.toISOString().slice(0, 10) },
+        attendees,
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error((err.error && err.error.message) || "创建日程失败");
+
+      const meeting = assignmentInfo && assignmentInfo.suggestedMeeting;
+      if (meeting && meeting.time && meeting.time !== "TBD") {
+        const meetingDate = new Date();
+        meetingDate.setDate(meetingDate.getDate() + 3);
+        events.push({
+          summary: "Suggested team meeting — " + meeting.time,
+          description:
+            "Added by TeamFlow. This is a placeholder date — confirm an actual date/time with your team." +
+            (meeting.reason ? `\n\nWhy this time: ${meeting.reason}` : ""),
+          start: { date: meetingDate.toISOString().slice(0, 10) },
+          end: { date: meetingDate.toISOString().slice(0, 10) },
+          attendees,
+        });
       }
 
+      for (const event of events) {
+        const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${googleAccessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify(event),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error((err.error && err.error.message) || "创建日程失败");
+        }
+      }
+
+      const eventWord = events.length > 1 ? `${events.length} events (deadline + suggested meeting)` : "the deadline";
       googleStatusEl.textContent = attendees.length
-        ? `Added to Google Calendar and invited ${attendees.length} team member(s) — double-check the date against the real deadline.`
-        : "Added to Google Calendar — double-check the date against the real deadline. (No team emails were filled in, so no one else was invited.)";
+        ? `Added ${eventWord} to Google Calendar and invited ${attendees.length} team member(s) — double-check the dates.`
+        : `Added ${eventWord} to Google Calendar — double-check the dates. (No team emails were filled in, so no one else was invited.)`;
     } catch (err) {
       googleStatusEl.textContent = "添加到 Calendar 失败: " + err.message;
       googleStatusEl.classList.add("analyze-status-error");
@@ -996,8 +1058,83 @@
     }
   }
 
+  // ---- reminder email (manual send, not scheduled) -------------------------------------------------------
+  // This sends immediately when clicked, through the connected Gmail
+  // account. There is no automatic/scheduled version of this — that would
+  // need a database to store plans server-side and a cron job, which is a
+  // much bigger project than what's built here.
+  function base64UrlEncode(str) {
+    return btoa(unescape(encodeURIComponent(str)))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+  }
+
+  function encodeMimeHeader(str) {
+    return `=?UTF-8?B?${btoa(unescape(encodeURIComponent(str)))}?=`;
+  }
+
+  function buildReminderEmailBody() {
+    const lines = ["This is a reminder from TeamFlow about your group's task plan.", ""];
+    if (assignmentInfo && assignmentInfo.deadline) lines.push(`Deadline: ${assignmentInfo.deadline}`);
+    if (assignmentInfo && assignmentInfo.suggestedMeeting && assignmentInfo.suggestedMeeting.time) {
+      const m = assignmentInfo.suggestedMeeting;
+      lines.push(`Suggested meeting time: ${m.time}${m.reason ? " — " + m.reason : ""}`);
+    }
+    lines.push("", "Tasks:");
+    tasks.forEach((t) => {
+      lines.push(`- ${t.name} — ${teamMember(t.owner).name}, ${t.hours}h, due ${t.due} (${statusLabel[t.status]})`);
+    });
+    lines.push("", "— Sent via TeamFlow");
+    return lines.join("\r\n");
+  }
+
+  async function sendReminderEmail() {
+    if (!googleAccessToken) return;
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const recipients = team.filter((m) => m.email && emailPattern.test(m.email.trim())).map((m) => m.email.trim());
+    if (recipients.length === 0) {
+      googleStatusEl.textContent = "队友邮箱都没填,没法发提醒邮件——先在 Step 2 里补上邮箱。";
+      googleStatusEl.classList.add("analyze-status-error");
+      return;
+    }
+
+    sendReminderBtn.disabled = true;
+    sendReminderBtn.textContent = "Sending…";
+    googleStatusEl.classList.remove("analyze-status-error");
+
+    try {
+      const subject = "TeamFlow reminder" + (assignmentInfo && assignmentInfo.deadline ? " — due " + assignmentInfo.deadline : "");
+      const rawMessage =
+        `To: ${recipients.join(", ")}\r\n` +
+        `Subject: ${encodeMimeHeader(subject)}\r\n` +
+        `Content-Type: text/plain; charset=UTF-8\r\n\r\n` +
+        buildReminderEmailBody();
+
+      const res = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages/send", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${googleAccessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ raw: base64UrlEncode(rawMessage) }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error((err.error && err.error.message) || "发送失败");
+      }
+
+      googleStatusEl.textContent = `Reminder email sent to ${recipients.length} team member(s).`;
+    } catch (err) {
+      googleStatusEl.textContent = "发送提醒邮件失败: " + err.message;
+      googleStatusEl.classList.add("analyze-status-error");
+    } finally {
+      sendReminderBtn.disabled = false;
+      sendReminderBtn.textContent = "Send reminder email";
+    }
+  }
+
   if (saveSheetsBtn) saveSheetsBtn.addEventListener("click", saveToGoogleSheets);
   if (addCalendarBtn) addCalendarBtn.addEventListener("click", addToGoogleCalendar);
+  if (sendReminderBtn) sendReminderBtn.addEventListener("click", sendReminderEmail);
 
   // The Google script loads async, so try initializing once the page has
   // fully loaded rather than assuming it's ready immediately.

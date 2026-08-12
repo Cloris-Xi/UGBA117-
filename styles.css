@@ -160,17 +160,11 @@ button { font-family: inherit; cursor: pointer; }
   margin-right: auto;
 }
 .logo-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: var(--ink);
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 600;
+  object-fit: cover;
 }
 .logo-word { font-family: var(--font-display); font-size: 1.1rem; }
 .site-nav {

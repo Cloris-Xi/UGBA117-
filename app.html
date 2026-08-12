@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Build a Team Plan — TeamFlow</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <meta name="description" content="Paste your assignment, add your team, and get a fair task plan you can save to Google Sheets and Calendar.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +20,7 @@
 <header class="site-header">
   <div class="wrap header-row">
     <a href="index.html" class="logo">
-      <span class="logo-mark" aria-hidden="true">TF</span>
+      <img src="logo.png" class="logo-mark" alt="" aria-hidden="true">
       <span class="logo-word">TeamFlow</span>
     </a>
     <nav class="site-nav" aria-label="Primary">
@@ -137,6 +138,7 @@
           <button type="button" id="googleConnectBtn" class="btn btn-small btn-ghost">Connect Google</button>
           <button type="button" id="saveSheetsBtn" class="btn btn-small btn-ghost" disabled>Save to Google Sheets</button>
           <button type="button" id="addCalendarBtn" class="btn btn-small btn-ghost" disabled>Add to Google Calendar</button>
+          <button type="button" id="sendReminderBtn" class="btn btn-small btn-ghost" disabled>Send reminder email</button>
         </div>
         <p id="googleStatus" class="analyze-status" role="status" aria-live="polite"></p>
       </div>
@@ -149,7 +151,7 @@
 <footer class="site-footer">
   <div class="wrap footer-grid">
     <div>
-      <span class="logo-mark" aria-hidden="true">TF</span>
+      <img src="logo.png" class="logo-mark" alt="" aria-hidden="true">
       <p class="footer-tagline">TeamFlow<br>AI coordination for student group projects</p>
     </div>
     <nav class="footer-nav" aria-label="Footer">
@@ -176,8 +178,8 @@
       <h3>Saved locally, on your device only</h3>
       <p>Your current plan is saved in this browser's local storage so it's still here next time you visit. It never leaves your device unless you explicitly export or sync it (see below). Clearing your browser data will remove it.</p>
 
-      <h3>Google Sheets &amp; Calendar</h3>
-      <p>Connecting Google is optional and only happens if you click "Connect Google." We request the minimum access needed — creating/editing spreadsheets and calendar events, nothing else (not your email, contacts, or files). The access token is kept in memory only for that browser session and is never saved to disk. Nothing is sent to Google unless you click "Save to Google Sheets" or "Add to Google Calendar." If you fill in teammates' email addresses, clicking "Add to Google Calendar" sends them a calendar invite through Google — only do this with their knowledge.</p>
+      <h3>Google Sheets, Calendar &amp; Gmail</h3>
+      <p>Connecting Google is optional and only happens if you click "Connect Google." We request the minimum access needed — creating/editing spreadsheets, creating calendar events, and sending email on your behalf — nothing else (not your existing emails, contacts, or files). The access token is kept in memory only for that browser session and is never saved to disk. Nothing is sent to Google unless you click "Save to Google Sheets," "Add to Google Calendar," or "Send reminder email." If you fill in teammates' email addresses, "Add to Google Calendar" sends them a calendar invite and "Send reminder email" sends them an email with the task plan — both only when you click the button, and only do this with your teammates' knowledge.</p>
 
       <h3>CSV export</h3>
       <p>Downloads a file directly to your device. It doesn't pass through any server.</p>
