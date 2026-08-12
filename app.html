@@ -39,6 +39,31 @@
       <h1 class="display-md">Paste your assignment, add your team.</h1>
       <p class="section-sub">TeamFlow reads the assignment and suggests a task plan for your team. Nothing is final until you confirm it.</p>
 
+      <div class="card team-plan-card" id="teamPlanCard">
+        <div class="card-head">
+          <h3>Working with a team?</h3>
+        </div>
+        <div id="teamPlanIdle">
+          <p class="hint" style="margin-bottom: 12px;">Share one plan with your whole team — anyone with the link can view and update it, no login needed.</p>
+          <div class="google-actions">
+            <button type="button" id="createTeamPlanBtn" class="btn btn-small btn-ghost">Create shared plan for my team</button>
+          </div>
+          <div class="upload-row" style="margin-top: 12px;">
+            <input type="text" id="joinTeamCodeInput" class="team-input" placeholder="Enter a share code" style="max-width: 180px; flex: none;">
+            <button type="button" id="joinTeamPlanBtn" class="btn btn-small btn-ghost">Join</button>
+          </div>
+        </div>
+        <div id="teamPlanActive" hidden>
+          <p class="summary-line">Shared plan code: <strong id="teamPlanCodeDisplay"></strong></p>
+          <div class="google-actions">
+            <button type="button" id="copyTeamLinkBtn" class="btn btn-small btn-ghost">Copy share link</button>
+            <button type="button" id="refreshTeamPlanBtn" class="btn btn-small btn-ghost">Refresh from team</button>
+            <button type="button" id="leaveTeamPlanBtn" class="btn btn-small btn-ghost">Leave shared plan</button>
+          </div>
+        </div>
+        <p id="teamPlanStatus" class="analyze-status" role="status" aria-live="polite"></p>
+      </div>
+
       <div class="card upload-card">
         <div class="card-head">
           <h3>Step 1 — Your assignment</h3>
@@ -215,6 +240,9 @@
 
       <h3>Account sync (Step 5)</h3>
       <p>Also optional. If you click "Save to my account," your whole plan (assignment text, team, tasks) is stored on the same database, tied to your Google account's email — so you can get it back by connecting the same Google account on another device. This overwrites whatever was previously saved for that account. Nothing is synced automatically; it only happens when you click "Save to my account" or "Load from my account."</p>
+
+      <h3>Team-shared plan ("Working with a team?")</h3>
+      <p>If you create or join a shared plan, your team's plan (assignment text, team info, tasks) is stored on the same database under a share code, and updates are pushed there automatically as you make changes (so teammates can stay in sync) — no Google login required for this one. Anyone who has the code or link can view and edit that plan, the same way anyone with a Google Docs link can if you share it — so only share the code with your actual team.</p>
 
       <h3>What we don't do</h3>
       <p>No ads, no third-party trackers, no selling data, no account or password required.</p>

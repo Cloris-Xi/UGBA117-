@@ -487,6 +487,7 @@ button { font-family: inherit; cursor: pointer; }
 .google-card { margin-top: 20px; }
 .reminder-card { margin-top: 20px; }
 .sync-card { margin-top: 20px; }
+.team-plan-card { margin-bottom: 20px; }
 .google-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .google-actions .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 .analyze-status a { color: var(--accent-ink); font-weight: 600; }

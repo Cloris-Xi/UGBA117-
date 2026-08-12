@@ -59,6 +59,7 @@
   let teamImage = null; // same shape, for the team-roster upload
   let teamUploadText = ""; // text pulled from an uploaded team file — session only
   let reminderPlanId = null; // set once automatic reminders are enabled
+  let teamPlanCode = null; // set once this browser has created/joined a team-shared plan
 
   const statusOrder = ["todo", "progress", "done"];
   const statusLabel = { todo: "To do", progress: "In progress", done: "Done" };
@@ -76,11 +77,13 @@
           assignmentInfo,
           reminderPlanId,
           realDeadlineDate: realDeadlineDateEl ? realDeadlineDateEl.value : "",
+          teamPlanCode,
         })
       );
     } catch (e) {
       // localStorage may be unavailable (private browsing, quota) — fail silently.
     }
+    scheduleTeamPush();
   }
 
   function loadState() {
@@ -98,6 +101,7 @@
     if (saved.assignmentInfo) assignmentInfo = saved.assignmentInfo;
     if (saved.reminderPlanId) reminderPlanId = saved.reminderPlanId;
     if (saved.realDeadlineDate && realDeadlineDateEl) realDeadlineDateEl.value = saved.realDeadlineDate;
+    if (saved.teamPlanCode) teamPlanCode = saved.teamPlanCode;
     return true;
   }
 
@@ -914,6 +918,16 @@
   const saveAccountBtn = document.getElementById("saveAccountBtn");
   const loadAccountBtn = document.getElementById("loadAccountBtn");
   const syncStatusEl = document.getElementById("syncStatus");
+  const teamPlanIdleEl = document.getElementById("teamPlanIdle");
+  const teamPlanActiveEl = document.getElementById("teamPlanActive");
+  const teamPlanCodeDisplayEl = document.getElementById("teamPlanCodeDisplay");
+  const createTeamPlanBtn = document.getElementById("createTeamPlanBtn");
+  const joinTeamCodeInput = document.getElementById("joinTeamCodeInput");
+  const joinTeamPlanBtn = document.getElementById("joinTeamPlanBtn");
+  const copyTeamLinkBtn = document.getElementById("copyTeamLinkBtn");
+  const refreshTeamPlanBtn = document.getElementById("refreshTeamPlanBtn");
+  const leaveTeamPlanBtn = document.getElementById("leaveTeamPlanBtn");
+  const teamPlanStatusEl = document.getElementById("teamPlanStatus");
 
   function googleConfigured() {
     return typeof GOOGLE_CLIENT_ID !== "undefined" && GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes("YOUR_CLIENT_ID");
@@ -1371,6 +1385,153 @@
   if (saveAccountBtn) saveAccountBtn.addEventListener("click", saveToAccount);
   if (loadAccountBtn) loadAccountBtn.addEventListener("click", loadFromAccount);
 
+  // ---- team-shared plan (a code/link the whole team can use, no login) -------------------------------------------------------
+  async function callTeamPlanApi(action, extra) {
+    const body = JSON.stringify({ action, ...extra });
+    for (const endpoint of ["/api/team-plan", "/.netlify/functions/team-plan"]) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+        });
+        if (response.status === 404) continue;
+        const data = await response.json();
+        return { ok: response.ok, data };
+      } catch (err) {
+        // Try the next endpoint.
+      }
+    }
+    return null; // neither endpoint reachable — backend not deployed/configured
+  }
+
+  function showTeamPlanActive() {
+    teamPlanIdleEl.hidden = true;
+    teamPlanActiveEl.hidden = false;
+    teamPlanCodeDisplayEl.textContent = teamPlanCode;
+  }
+
+  function showTeamPlanIdle() {
+    teamPlanIdleEl.hidden = false;
+    teamPlanActiveEl.hidden = true;
+  }
+
+  // Debounced auto-push: every local change calls saveState(), which
+  // schedules this — multiple rapid edits (e.g. typing) collapse into one
+  // network call about a second after the user pauses, instead of firing
+  // on every keystroke.
+  let teamPushTimer = null;
+  function scheduleTeamPush() {
+    if (!teamPlanCode) return;
+    clearTimeout(teamPushTimer);
+    teamPushTimer = setTimeout(() => {
+      callTeamPlanApi("save", { code: teamPlanCode, planData: collectFullState() });
+    }, 1200);
+  }
+
+  async function createTeamPlanFlow() {
+    createTeamPlanBtn.disabled = true;
+    createTeamPlanBtn.textContent = "Creating…";
+    teamPlanStatusEl.classList.remove("analyze-status-error");
+
+    const result = await callTeamPlanApi("create", { planData: collectFullState() });
+    if (!result) {
+      teamPlanStatusEl.textContent = "这个功能需要先配置好后端存储服务(Upstash)才能用。";
+      teamPlanStatusEl.classList.add("analyze-status-error");
+    } else if (result.ok) {
+      teamPlanCode = result.data.code;
+      saveState();
+      showTeamPlanActive();
+      teamPlanStatusEl.textContent = "Shared plan created — copy the link below and send it to your team.";
+    } else {
+      teamPlanStatusEl.textContent = result.data.error || "创建失败,请重试。";
+      teamPlanStatusEl.classList.add("analyze-status-error");
+    }
+
+    createTeamPlanBtn.disabled = false;
+    createTeamPlanBtn.textContent = "Create shared plan for my team";
+  }
+
+  async function joinTeamPlanFlow(code, opts) {
+    const silent = opts && opts.silent;
+    if (!code) return;
+    if (!silent) {
+      joinTeamPlanBtn.disabled = true;
+      joinTeamPlanBtn.textContent = "Joining…";
+    }
+    teamPlanStatusEl.classList.remove("analyze-status-error");
+
+    const result = await callTeamPlanApi("load", { code });
+    if (!result) {
+      if (!silent) {
+        teamPlanStatusEl.textContent = "这个功能需要先配置好后端存储服务(Upstash)才能用。";
+        teamPlanStatusEl.classList.add("analyze-status-error");
+      }
+    } else if (result.ok) {
+      applyFullState(result.data.planData);
+      teamPlanCode = code;
+      saveState();
+      showTeamPlanActive();
+      teamPlanStatusEl.textContent = `Synced with your team's shared plan (updated ${new Date(result.data.updatedAt).toLocaleString()}).`;
+    } else {
+      teamPlanStatusEl.textContent = result.data.error || "加入失败,请检查代码是否正确。";
+      teamPlanStatusEl.classList.add("analyze-status-error");
+    }
+
+    if (!silent) {
+      joinTeamPlanBtn.disabled = false;
+      joinTeamPlanBtn.textContent = "Join";
+    }
+  }
+
+  function leaveTeamPlan() {
+    teamPlanCode = null;
+    saveState();
+    showTeamPlanIdle();
+    teamPlanStatusEl.classList.remove("analyze-status-error");
+    teamPlanStatusEl.textContent = "Left the shared plan — you're back to working solo (still saved locally in this browser).";
+  }
+
+  // Reads a "?team=CODE" URL param (what teammates get from a share
+  // link), joins automatically, and cleans the param out of the URL so
+  // refreshing doesn't repeatedly re-trigger it.
+  function initTeamPlanFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const urlCode = params.get("team");
+    if (!urlCode) return false;
+    params.delete("team");
+    const newUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
+    window.history.replaceState({}, "", newUrl);
+    joinTeamPlanFlow(urlCode.toUpperCase(), { silent: true });
+    return true;
+  }
+
+  if (createTeamPlanBtn) createTeamPlanBtn.addEventListener("click", createTeamPlanFlow);
+  if (joinTeamPlanBtn) {
+    joinTeamPlanBtn.addEventListener("click", () => joinTeamPlanFlow(joinTeamCodeInput.value.trim().toUpperCase()));
+  }
+  if (leaveTeamPlanBtn) leaveTeamPlanBtn.addEventListener("click", leaveTeamPlan);
+  if (refreshTeamPlanBtn) {
+    refreshTeamPlanBtn.addEventListener("click", () => {
+      if (teamPlanCode) joinTeamPlanFlow(teamPlanCode);
+    });
+  }
+  if (copyTeamLinkBtn) {
+    copyTeamLinkBtn.addEventListener("click", () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("team", teamPlanCode);
+      navigator.clipboard
+        .writeText(url.toString())
+        .then(() => {
+          teamPlanStatusEl.classList.remove("analyze-status-error");
+          teamPlanStatusEl.textContent = "Link copied — send it to your team.";
+        })
+        .catch(() => {
+          teamPlanStatusEl.textContent = "复制失败,把这个代码手动发给队友:" + teamPlanCode;
+        });
+    });
+  }
+
   // The Google script loads async, so try initializing once the page has
   // fully loaded rather than assuming it's ready immediately.
   window.addEventListener("load", initGoogleClient);
@@ -1385,5 +1546,10 @@
   if (reminderPlanId && disableReminderBtn) {
     disableReminderBtn.disabled = false;
     reminderStatusEl.textContent = "Automatic reminders are on for this plan.";
+  }
+  const joinedViaUrl = initTeamPlanFromUrl();
+  if (!joinedViaUrl && teamPlanCode) {
+    showTeamPlanActive();
+    joinTeamPlanFlow(teamPlanCode, { silent: true }); // pull any updates teammates made since your last visit
   }
 })();
