@@ -22,12 +22,13 @@
       <span class="logo-word">TeamFlow</span>
     </a>
     <nav class="site-nav" aria-label="Primary">
-      <a href="#how-it-works">Workflow</a>
-      <a href="#features">Features</a>
-      <a href="#compare">Why TeamFlow</a>
-      <a href="#mvp">MVP</a>
+      <a href="#how-it-works" data-i18n="nav.workflow">Workflow</a>
+      <a href="#features" data-i18n="nav.features">Features</a>
+      <a href="#compare" data-i18n="nav.compare">Why TeamFlow</a>
+      <a href="#mvp" data-i18n="nav.mvp">MVP</a>
     </nav>
-    <a class="btn btn-small btn-primary" href="app.html">Build a Team Plan</a>
+    <button type="button" class="lang-toggle-btn btn btn-small btn-ghost" onclick="toggleLanguage()">中文</button>
+    <a class="btn btn-small btn-primary" href="app.html" data-i18n="hero.ctaPrimary">Build a Team Plan</a>
   </div>
 </header>
 
@@ -37,12 +38,12 @@
   <section class="hero" id="top">
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow">For student group projects</p>
-        <h1 class="display-xl">Turn group assignments into a clear team plan.</h1>
-        <p class="hero-sub">Upload your assignment. TeamFlow breaks it into tasks, suggests a fair division of work, and helps your team stay on schedule.</p>
+        <p class="eyebrow" data-i18n="hero.eyebrow">For student group projects</p>
+        <h1 class="display-xl" data-i18n="hero.title">Turn group assignments into a clear team plan.</h1>
+        <p class="hero-sub" data-i18n="hero.sub">Upload your assignment. TeamFlow breaks it into tasks, suggests a fair division of work, and helps your team stay on schedule.</p>
         <div class="hero-ctas">
-          <a href="app.html" class="btn btn-primary">Build a Team Plan</a>
-          <a href="#how-it-works" class="btn btn-ghost">See How It Works</a>
+          <a href="app.html" class="btn btn-primary" data-i18n="hero.ctaPrimary">Build a Team Plan</a>
+          <a href="#how-it-works" class="btn btn-ghost" data-i18n="hero.ctaSecondary">See How It Works</a>
         </div>
       </div>
 
@@ -82,23 +83,23 @@
   <!-- ============ THE PROBLEM ============ -->
   <section class="problem" id="problem">
     <div class="wrap">
-      <h2 class="display-md">Group projects should not be this difficult.</h2>
+      <h2 class="display-md" data-i18n="problem.title">Group projects should not be this difficult.</h2>
       <div class="problem-grid">
         <div class="problem-card">
-          <span class="problem-tag">Unclear responsibilities</span>
-          <p>"Everyone thought someone else was making the final slides."</p>
+          <span class="problem-tag" data-i18n="problem.tag1">Unclear responsibilities</span>
+          <p data-i18n="problem.text1">"Everyone thought someone else was making the final slides."</p>
         </div>
         <div class="problem-card">
-          <span class="problem-tag">Unequal workloads</span>
-          <p>"Two people did the research, the analysis, and the slides — everyone else just showed up to present."</p>
+          <span class="problem-tag" data-i18n="problem.tag2">Unequal workloads</span>
+          <p data-i18n="problem.text2">"Two people did the research, the analysis, and the slides — everyone else just showed up to present."</p>
         </div>
         <div class="problem-card">
-          <span class="problem-tag">Scheduling conflicts</span>
-          <p>"We spent three group chats just trying to find one hour that worked for everyone."</p>
+          <span class="problem-tag" data-i18n="problem.tag3">Scheduling conflicts</span>
+          <p data-i18n="problem.text3">"We spent three group chats just trying to find one hour that worked for everyone."</p>
         </div>
         <div class="problem-card">
-          <span class="problem-tag">Missed deadlines &amp; scattered files</span>
-          <p>"The final version was somewhere between four group chats and someone's email drafts."</p>
+          <span class="problem-tag" data-i18n="problem.tag4">Missed deadlines &amp; scattered files</span>
+          <p data-i18n="problem.text4">"The final version was somewhere between four group chats and someone's email drafts."</p>
         </div>
       </div>
     </div>
@@ -107,28 +108,28 @@
   <!-- ============ HOW IT WORKS ============ -->
   <section class="how" id="how-it-works">
     <div class="wrap">
-      <p class="eyebrow">How TeamFlow works</p>
-      <h2 class="display-md">One assignment, four steps, one shared plan.</h2>
+      <p class="eyebrow" data-i18n="how.eyebrow">How TeamFlow works</p>
+      <h2 class="display-md" data-i18n="how.title">One assignment, four steps, one shared plan.</h2>
       <ol class="steps">
         <li class="step">
           <span class="step-num">01</span>
-          <h3>Upload the assignment</h3>
-          <p>TeamFlow reads a PDF, screenshot, email, or plain text and identifies the deadline, deliverables, and grading requirements.</p>
+          <h3 data-i18n="how.step1.title">Upload the assignment</h3>
+          <p data-i18n="how.step1.text">TeamFlow reads a PDF, screenshot, email, or plain text and identifies the deadline, deliverables, and grading requirements.</p>
         </li>
         <li class="step">
           <span class="step-num">02</span>
-          <h3>Add your team</h3>
-          <p>Members enter their skills, interests, available time, and scheduling preferences.</p>
+          <h3 data-i18n="how.step2.title">Add your team</h3>
+          <p data-i18n="how.step2.text">Members enter their skills, interests, available time, and scheduling preferences.</p>
         </li>
         <li class="step">
           <span class="step-num">03</span>
-          <h3>Review the AI plan</h3>
-          <p>TeamFlow creates tasks, suggests owners, estimates workload, and recommends internal deadlines and meeting times. Nothing is final until your team confirms it — every task can be edited or exchanged.</p>
+          <h3 data-i18n="how.step3.title">Review the AI plan</h3>
+          <p data-i18n="how.step3.text">TeamFlow creates tasks, suggests owners, estimates workload, and recommends internal deadlines and meeting times. Nothing is final until your team confirms it — every task can be edited or exchanged.</p>
         </li>
         <li class="step">
           <span class="step-num">04</span>
-          <h3>Work together</h3>
-          <p>The confirmed plan is saved to a shared tracker, and key dates are added to Google Calendar.</p>
+          <h3 data-i18n="how.step4.title">Work together</h3>
+          <p data-i18n="how.step4.text">The confirmed plan is saved to a shared tracker, and key dates are added to Google Calendar.</p>
         </li>
       </ol>
     </div>
@@ -137,32 +138,32 @@
   <!-- ============ FEATURES ============ -->
   <section class="features" id="features">
     <div class="wrap">
-      <p class="eyebrow">Core features</p>
-      <h2 class="display-md">What the MVP actually does.</h2>
+      <p class="eyebrow" data-i18n="features.eyebrow">Core features</p>
+      <h2 class="display-md" data-i18n="features.title">What the MVP actually does.</h2>
       <div class="features-grid">
         <div class="feature">
-          <h3>Assignment understanding</h3>
-          <p>Reads uploaded briefs and pulls out the deadline, required deliverables, and grading criteria.</p>
+          <h3 data-i18n="features.f1.title">Assignment understanding</h3>
+          <p data-i18n="features.f1.text">Reads uploaded briefs and pulls out the deadline, required deliverables, and grading criteria.</p>
         </div>
         <div class="feature">
-          <h3>Automatic task breakdown</h3>
-          <p>Splits the assignment into concrete, assignable tasks instead of one long to-do list.</p>
+          <h3 data-i18n="features.f2.title">Automatic task breakdown</h3>
+          <p data-i18n="features.f2.text">Splits the assignment into concrete, assignable tasks instead of one long to-do list.</p>
         </div>
         <div class="feature">
-          <h3>Fair workload recommendations</h3>
-          <p>Suggests owners based on each member's skills, interests, and available time — and shows the hours next to each name.</p>
+          <h3 data-i18n="features.f3.title">Fair workload recommendations</h3>
+          <p data-i18n="features.f3.text">Suggests owners based on each member's skills, interests, and available time — and shows the hours next to each name.</p>
         </div>
         <div class="feature">
-          <h3>Team scheduling</h3>
-          <p>Recommends meeting times that fit the group's stated availability.</p>
+          <h3 data-i18n="features.f4.title">Team scheduling</h3>
+          <p data-i18n="features.f4.text">Recommends meeting times that fit the group's stated availability.</p>
         </div>
         <div class="feature">
-          <h3>Progress and risk tracking</h3>
-          <p>Flags tasks that are running late and shows what else that delay could affect.</p>
+          <h3 data-i18n="features.f5.title">Progress and risk tracking</h3>
+          <p data-i18n="features.f5.text">Flags tasks that are running late and shows what else that delay could affect.</p>
         </div>
         <div class="feature">
-          <h3>Final submission checklist</h3>
-          <p>Pulls every deliverable back together into one list before you submit.</p>
+          <h3 data-i18n="features.f6.title">Final submission checklist</h3>
+          <p data-i18n="features.f6.text">Pulls every deliverable back together into one list before you submit.</p>
         </div>
       </div>
     </div>
@@ -171,30 +172,30 @@
   <!-- ============ COMPARISON ============ -->
   <section class="compare" id="compare">
     <div class="wrap">
-      <p class="eyebrow">Why not just use ChatGPT or a task manager?</p>
-      <h2 class="display-md">A connected group-project workflow, not just another tool.</h2>
+      <p class="eyebrow" data-i18n="compare.eyebrow">Why not just use ChatGPT or a task manager?</p>
+      <h2 class="display-md" data-i18n="compare.title">A connected group-project workflow, not just another tool.</h2>
       <div class="table-scroll">
         <table class="compare-table">
           <thead>
             <tr>
-              <th scope="col">Capability</th>
-              <th scope="col">TeamFlow</th>
-              <th scope="col">General AI chatbot</th>
-              <th scope="col">Normal task manager</th>
+              <th scope="col" data-i18n="compare.col.capability">Capability</th>
+              <th scope="col" data-i18n="compare.col.teamflow">TeamFlow</th>
+              <th scope="col" data-i18n="compare.col.chatbot">General AI chatbot</th>
+              <th scope="col" data-i18n="compare.col.taskmanager">Normal task manager</th>
             </tr>
           </thead>
           <tbody>
-            <tr><th scope="row">Understands assignment instructions</th><td class="yes">Yes</td><td class="partial">With the right prompt</td><td class="no">No</td></tr>
-            <tr><th scope="row">Creates a full task structure</th><td class="yes">Yes</td><td class="partial">If you ask it to</td><td class="partial">Manual setup</td></tr>
-            <tr><th scope="row">Uses team skills and availability</th><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td></tr>
-            <tr><th scope="row">Checks workload balance</th><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td></tr>
-            <tr><th scope="row">Suggests meeting times</th><td class="yes">Yes</td><td class="partial">If described in detail</td><td class="no">No</td></tr>
-            <tr><th scope="row">Tracks project risks</th><td class="yes">Yes</td><td class="no">No</td><td class="partial">Manual updates only</td></tr>
-            <tr><th scope="row">Creates a final checklist</th><td class="yes">Yes</td><td class="partial">If you ask it to</td><td class="partial">Manual setup</td></tr>
+            <tr><th scope="row" data-i18n="compare.row1">Understands assignment instructions</th><td class="yes">Yes</td><td class="partial">With the right prompt</td><td class="no">No</td></tr>
+            <tr><th scope="row" data-i18n="compare.row2">Creates a full task structure</th><td class="yes">Yes</td><td class="partial">If you ask it to</td><td class="partial">Manual setup</td></tr>
+            <tr><th scope="row" data-i18n="compare.row3">Uses team skills and availability</th><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td></tr>
+            <tr><th scope="row" data-i18n="compare.row4">Checks workload balance</th><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td></tr>
+            <tr><th scope="row" data-i18n="compare.row5">Suggests meeting times</th><td class="yes">Yes</td><td class="partial">If described in detail</td><td class="no">No</td></tr>
+            <tr><th scope="row" data-i18n="compare.row6">Tracks project risks</th><td class="yes">Yes</td><td class="no">No</td><td class="partial">Manual updates only</td></tr>
+            <tr><th scope="row" data-i18n="compare.row7">Creates a final checklist</th><td class="yes">Yes</td><td class="partial">If you ask it to</td><td class="partial">Manual setup</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="compare-note">General chatbots and task managers are useful tools on their own — TeamFlow connects assignment understanding, fair task planning, and scheduling into one workflow built specifically for group coursework.</p>
+      <p class="compare-note" data-i18n="compare.note">General chatbots and task managers are useful tools on their own — TeamFlow connects assignment understanding, fair task planning, and scheduling into one workflow built specifically for group coursework.</p>
     </div>
   </section>
 
@@ -202,17 +203,17 @@
   <section class="mvp" id="mvp">
     <div class="wrap">
       <div class="mvp-col mvp-solo">
-        <p class="eyebrow">What's included</p>
-        <h2 class="display-sm">Everything TeamFlow does today</h2>
+        <p class="eyebrow" data-i18n="mvp.eyebrow">What's included</p>
+        <h2 class="display-sm" data-i18n="mvp.title">Everything TeamFlow does today</h2>
         <ul class="check-list check-list-grid">
-          <li>Assignment upload &amp; AI understanding</li>
-          <li>Automatic task breakdown</li>
-          <li>Fair, workload-balanced task assignment</li>
-          <li>Team management (add, remove, edit)</li>
-          <li>Risk detection &amp; delay alerts</li>
-          <li>CSV export</li>
-          <li>Google Sheets sync</li>
-          <li>Google Calendar &amp; teammate invites</li>
+          <li data-i18n="mvp.item1">Assignment upload &amp; AI understanding</li>
+          <li data-i18n="mvp.item2">Automatic task breakdown</li>
+          <li data-i18n="mvp.item3">Fair, workload-balanced task assignment</li>
+          <li data-i18n="mvp.item4">Team management (add, remove, edit)</li>
+          <li data-i18n="mvp.item5">Risk detection &amp; delay alerts</li>
+          <li data-i18n="mvp.item6">CSV export</li>
+          <li data-i18n="mvp.item7">Google Sheets sync</li>
+          <li data-i18n="mvp.item8">Google Calendar &amp; teammate invites</li>
         </ul>
       </div>
     </div>
@@ -221,11 +222,11 @@
   <!-- ============ FINAL CTA ============ -->
   <section class="final-cta">
     <div class="wrap final-cta-inner">
-      <h2 class="display-md">Make your next group project easier to manage.</h2>
-      <p class="hero-sub">Start with one assignment and turn it into a fair, editable, and trackable team plan.</p>
+      <h2 class="display-md" data-i18n="finalcta.title">Make your next group project easier to manage.</h2>
+      <p class="hero-sub" data-i18n="finalcta.sub">Start with one assignment and turn it into a fair, editable, and trackable team plan.</p>
       <div class="hero-ctas">
-        <a href="app.html" class="btn btn-primary">Create a Team Plan</a>
-        <a href="#how-it-works" class="btn btn-ghost">View the MVP Workflow</a>
+        <a href="app.html" class="btn btn-primary" data-i18n="finalcta.primary">Create a Team Plan</a>
+        <a href="#how-it-works" class="btn btn-ghost" data-i18n="finalcta.secondary">View the MVP Workflow</a>
       </div>
     </div>
   </section>
@@ -236,14 +237,14 @@
   <div class="wrap footer-grid">
     <div>
       <img src="logo.png" class="logo-mark" alt="" aria-hidden="true">
-      <p class="footer-tagline">TeamFlow<br>AI coordination for student group projects</p>
+      <p class="footer-tagline" data-i18n="footer.tagline">TeamFlow<br>AI coordination for student group projects</p>
     </div>
     <nav class="footer-nav" aria-label="Footer">
-      <a href="#features">Product</a>
-      <a href="#how-it-works">Workflow</a>
-      <a href="#mvp">MVP</a>
-      <button type="button" id="privacyLinkBtn" class="footer-link-btn">Privacy &amp; data use</button>
-      <a href="mailto:hello@teamflow.app">Contact</a>
+      <a href="#features" data-i18n="footer.product">Product</a>
+      <a href="#how-it-works" data-i18n="footer.workflow">Workflow</a>
+      <a href="#mvp" data-i18n="footer.mvp">MVP</a>
+      <button type="button" id="privacyLinkBtn" class="footer-link-btn" data-i18n="footer.privacy">Privacy &amp; data use</button>
+      <a href="mailto:hello@teamflow.app" data-i18n="footer.contact">Contact</a>
     </nav>
   </div>
 </footer>
@@ -251,30 +252,31 @@
 <div class="modal-overlay" id="privacyOverlay" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
     <div class="modal-head">
-      <h2 id="privacyTitle">Privacy &amp; data use</h2>
+      <h2 id="privacyTitle" data-i18n="privacy.title">Privacy &amp; data use</h2>
       <button type="button" id="privacyCloseBtn" class="modal-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <p>This is a course-project prototype. Here's exactly what happens to your data — no accounts, no hidden tracking.</p>
+      <p data-i18n="privacy.intro">This is a course-project prototype. Here's exactly what happens to your data — no accounts, no hidden tracking.</p>
 
-      <h3>Assignment text &amp; team info</h3>
+      <h3 data-i18n="privacy.h1">Assignment text &amp; team info</h3>
       <p>What you type into the assignment box and team form stays in your browser. When you click "Build a Team Plan," it's sent to a small server function to generate the task plan (using an AI model where one is configured, or a free local rule-based planner otherwise) — it isn't stored on any server or database afterward.</p>
 
-      <h3>Saved locally, on your device only</h3>
+      <h3 data-i18n="privacy.h2">Saved locally, on your device only</h3>
       <p>Your current plan is saved in this browser's local storage so it's still here next time you visit. It never leaves your device unless you explicitly export or sync it (see below). Clearing your browser data will remove it.</p>
 
-      <h3>Google Sheets &amp; Calendar</h3>
+      <h3 data-i18n="privacy.h3">Google Sheets &amp; Calendar</h3>
       <p>Connecting Google is optional and only happens if you click "Connect Google." We request the minimum access needed — creating/editing spreadsheets and calendar events, nothing else (not your email, contacts, or files). The access token is kept in memory only for that browser session and is never saved to disk. Nothing is sent to Google unless you click "Save to Google Sheets" or "Add to Google Calendar." If you fill in teammates' email addresses, clicking "Add to Google Calendar" sends them a calendar invite through Google — only do this with their knowledge.</p>
 
-      <h3>CSV export</h3>
+      <h3 data-i18n="privacy.h4">CSV export</h3>
       <p>Downloads a file directly to your device. It doesn't pass through any server.</p>
 
-      <h3>What we don't do</h3>
-      <p>No ads, no third-party trackers, no selling data, no account or password required.</p>
+      <h3 data-i18n="privacy.h8">What we don't do</h3>
+      <p data-i18n="privacy.notdo">No ads, no third-party trackers, no selling data, no account or password required.</p>
     </div>
   </div>
 </div>
 
+<script src="lang.js"></script>
 <script src="site.js"></script>
 <script src="privacy-modal.js"></script>
 </body>

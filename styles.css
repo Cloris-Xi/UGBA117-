@@ -174,6 +174,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .site-nav a { text-decoration: none; color: var(--ink-soft); }
 .site-nav a:hover { color: var(--ink); }
+.lang-toggle-btn { flex-shrink: 0; }
 
 @media (max-width: 780px) {
   .site-nav { display: none; }

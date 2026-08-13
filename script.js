@@ -706,6 +706,9 @@
     Array.from(fileList || []).forEach((file) => processOneFile(file, target));
   }
 
+  window.addEventListener("dragover", (e) => e.preventDefault());
+  window.addEventListener("drop", (e) => e.preventDefault());
+
   function wireDropzone(dropzoneEl, fileInputEl, target) {
     if (!dropzoneEl || !fileInputEl) return;
 
@@ -716,6 +719,10 @@
         fileInputEl.click();
       }
     });
+    dropzoneEl.addEventListener("dragenter", (e) => {
+      e.preventDefault();
+      dropzoneEl.classList.add("dropzone-active");
+    });
     dropzoneEl.addEventListener("dragover", (e) => {
       e.preventDefault();
       dropzoneEl.classList.add("dropzone-active");
@@ -723,6 +730,7 @@
     dropzoneEl.addEventListener("dragleave", () => dropzoneEl.classList.remove("dropzone-active"));
     dropzoneEl.addEventListener("drop", (e) => {
       e.preventDefault();
+      e.stopPropagation();
       dropzoneEl.classList.remove("dropzone-active");
       handleIncomingFiles(e.dataTransfer.files, target);
     });

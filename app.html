@@ -25,41 +25,42 @@
       <span class="logo-word">TeamFlow</span>
     </a>
     <nav class="site-nav" aria-label="Primary">
-      <a href="index.html">Overview</a>
-      <a href="index.html#how-it-works">Workflow</a>
-      <a href="index.html#features">Features</a>
+      <a href="index.html" data-i18n="nav.overview">Overview</a>
+      <a href="index.html#how-it-works" data-i18n="nav.workflow">Workflow</a>
+      <a href="index.html#features" data-i18n="nav.features">Features</a>
     </nav>
-    <a class="btn btn-small btn-ghost" href="index.html">&larr; Back to overview</a>
+    <button type="button" class="lang-toggle-btn btn btn-small btn-ghost" onclick="toggleLanguage()">中文</button>
+    <a class="btn btn-small btn-ghost" href="index.html" data-i18n="nav.backToOverview">&larr; Back to overview</a>
   </div>
 </header>
 
 <main id="main">
   <section class="demo" id="demo" style="border-top: none; padding-top: 48px;">
     <div class="wrap">
-      <p class="eyebrow">Build a team plan</p>
-      <h1 class="display-md">Paste your assignment, add your team.</h1>
-      <p class="section-sub">TeamFlow reads the assignment and suggests a task plan for your team. Nothing is final until you confirm it.</p>
+      <p class="eyebrow" data-i18n="app.eyebrow">Build a team plan</p>
+      <h1 class="display-md" data-i18n="app.title">Paste your assignment, add your team.</h1>
+      <p class="section-sub" data-i18n="app.sub">TeamFlow reads the assignment and suggests a task plan for your team. Nothing is final until you confirm it.</p>
 
       <div class="card team-plan-card" id="teamPlanCard">
         <div class="card-head">
-          <h3>Working with a team?</h3>
+          <h3 data-i18n="app.teamPlan.title">Working with a team?</h3>
         </div>
         <div id="teamPlanIdle">
-          <p class="hint" style="margin-bottom: 12px;">Share one plan with your whole team — anyone with the link can view and update it, no login needed.</p>
+          <p class="hint" style="margin-bottom: 12px;" data-i18n="app.teamPlan.hint">Share one plan with your whole team — anyone with the link can view and update it, no login needed.</p>
           <div class="google-actions">
-            <button type="button" id="createTeamPlanBtn" class="btn btn-small btn-ghost">Create shared plan for my team</button>
+            <button type="button" id="createTeamPlanBtn" class="btn btn-small btn-ghost" data-i18n="app.teamPlan.create">Create shared plan for my team</button>
           </div>
           <div class="upload-row" style="margin-top: 12px;">
-            <input type="text" id="joinTeamCodeInput" class="team-input" placeholder="Enter a share code" style="max-width: 180px; flex: none;">
-            <button type="button" id="joinTeamPlanBtn" class="btn btn-small btn-ghost">Join</button>
+            <input type="text" id="joinTeamCodeInput" class="team-input" placeholder="Enter a share code" data-i18n-placeholder="app.teamPlan.joinPlaceholder" style="max-width: 180px; flex: none;">
+            <button type="button" id="joinTeamPlanBtn" class="btn btn-small btn-ghost" data-i18n="app.teamPlan.join">Join</button>
           </div>
         </div>
         <div id="teamPlanActive" hidden>
           <p class="summary-line">Shared plan code: <strong id="teamPlanCodeDisplay"></strong></p>
           <div class="google-actions">
-            <button type="button" id="copyTeamLinkBtn" class="btn btn-small btn-ghost">Copy share link</button>
-            <button type="button" id="refreshTeamPlanBtn" class="btn btn-small btn-ghost">Refresh from team</button>
-            <button type="button" id="leaveTeamPlanBtn" class="btn btn-small btn-ghost">Leave shared plan</button>
+            <button type="button" id="copyTeamLinkBtn" class="btn btn-small btn-ghost" data-i18n="app.teamPlan.copyLink">Copy share link</button>
+            <button type="button" id="refreshTeamPlanBtn" class="btn btn-small btn-ghost" data-i18n="app.teamPlan.refresh">Refresh from team</button>
+            <button type="button" id="leaveTeamPlanBtn" class="btn btn-small btn-ghost" data-i18n="app.teamPlan.leave">Leave shared plan</button>
           </div>
         </div>
         <p id="teamPlanStatus" class="analyze-status" role="status" aria-live="polite"></p>
@@ -67,34 +68,34 @@
 
       <div class="card upload-card">
         <div class="card-head">
-          <h3>Step 1 — Your assignment</h3>
+          <h3 data-i18n="app.step1.title">Step 1 — Your assignment</h3>
         </div>
-        <label class="field-label" for="assignmentText">Paste the assignment description</label>
+        <label class="field-label" for="assignmentText" data-i18n="app.step1.label">Paste the assignment description</label>
         <textarea id="assignmentText" class="assignment-input" rows="5" placeholder="e.g. Prepare a 20-minute group presentation on a case study of your choice. Due in two weeks..."></textarea>
 
         <div id="assignmentDropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload or drop assignment files">
-          <p class="dropzone-title">Drag files here, click to browse, or paste (Ctrl+V)</p>
-          <p class="hint">Images, PDF, DOCX, or TXT — up to 4 files, 3MB each</p>
+          <p class="dropzone-title" data-i18n="app.dropzone.title">Drag files here, click to browse, or paste (Ctrl+V)</p>
+          <p class="hint" data-i18n="app.dropzone.hint">Images, PDF, DOCX, or TXT — up to 4 files, 3MB each</p>
           <input type="file" id="assignmentFileInput" accept="image/*,.pdf,.docx,.txt,.md" multiple hidden>
         </div>
         <p id="assignmentFileStatus" class="analyze-status" role="status" aria-live="polite"></p>
         <div id="assignmentAttachmentList" class="attachment-list"></div>
 
-        <label class="field-label" for="requirementsText" style="margin-top: 20px;">Teacher's requirements / grading criteria (optional)</label>
+        <label class="field-label" for="requirementsText" style="margin-top: 20px;" data-i18n="app.requirements.label">Teacher's requirements / grading criteria (optional)</label>
         <textarea id="requirementsText" class="assignment-input" rows="3" placeholder="e.g. Must cite at least 3 sources. APA format. Lose points for going over the time limit."></textarea>
 
         <div class="card-head" style="margin-top: 24px;">
-          <h3>Step 2 — Your team</h3>
-          <span class="hint">Skills and availability help TeamFlow suggest fair owners</span>
+          <h3 data-i18n="app.step2.title">Step 2 — Your team</h3>
+          <span class="hint" data-i18n="app.step2.hint">Skills and availability help TeamFlow suggest fair owners</span>
         </div>
 
         <div id="teamDropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload or drop team roster files">
-          <p class="dropzone-title">Drag a roster/schedule file here, click to browse, or paste (Ctrl+V)</p>
-          <p class="hint">Images, PDF, DOCX, or TXT — up to 4 files, 3MB each</p>
+          <p class="dropzone-title" data-i18n="app.teamDropzone.title">Drag a roster/schedule file here, click to browse, or paste (Ctrl+V)</p>
+          <p class="hint" data-i18n="app.dropzone.hint">Images, PDF, DOCX, or TXT — up to 4 files, 3MB each</p>
           <input type="file" id="teamFileInput" accept="image/*,.pdf,.docx,.txt,.md" multiple hidden>
         </div>
         <div class="google-actions" style="margin-top: 10px;">
-          <button type="button" id="extractTeamBtn" class="btn btn-small btn-ghost" disabled>Fill team from upload</button>
+          <button type="button" id="extractTeamBtn" class="btn btn-small btn-ghost" disabled data-i18n="app.fillFromUpload">Fill team from upload</button>
         </div>
         <p id="teamFileStatus" class="analyze-status" role="status" aria-live="polite"></p>
         <div id="teamAttachmentList" class="attachment-list"></div>
@@ -107,9 +108,9 @@
           <span></span>
         </div>
         <div id="teamForm" class="team-form"></div>
-        <button type="button" id="addMemberBtn" class="btn btn-small btn-ghost add-member-btn">+ Add member</button>
+        <button type="button" id="addMemberBtn" class="btn btn-small btn-ghost add-member-btn" data-i18n="app.addMember">+ Add member</button>
 
-        <button type="button" id="analyzeBtn" class="btn btn-primary" style="margin-top: 20px;">Build a Team Plan</button>
+        <button type="button" id="analyzeBtn" class="btn btn-primary" style="margin-top: 20px;" data-i18n="app.buildPlan">Build a Team Plan</button>
         <p id="analyzeStatus" class="analyze-status" role="status" aria-live="polite"></p>
       </div>
 
@@ -118,10 +119,10 @@
       <div class="demo-layout" style="margin-top: 32px;">
         <div class="demo-tasks card">
           <div class="card-head">
-            <h3>Task plan</h3>
+            <h3 data-i18n="app.taskPlan.title">Task plan</h3>
             <div class="card-head-actions">
-              <span class="hint">Click a name to reassign · click status to update</span>
-              <button type="button" id="exportCsvBtn" class="btn btn-small btn-ghost">Export as CSV</button>
+              <span class="hint" data-i18n="app.taskPlan.hint">Click a name to reassign · click status to update</span>
+              <button type="button" id="exportCsvBtn" class="btn btn-small btn-ghost" data-i18n="app.exportCsv">Export as CSV</button>
             </div>
           </div>
           <div id="taskList" class="task-list" role="list"></div>
@@ -129,13 +130,13 @@
 
         <div class="demo-side">
           <div class="card workload-card">
-            <h3>Workload balance</h3>
+            <h3 data-i18n="app.workload.title">Workload balance</h3>
             <div id="workloadBars" class="workload-bars"></div>
             <p id="workloadMsg" class="workload-msg">Workload looks balanced.</p>
           </div>
 
           <div class="card risk-card" id="riskCard">
-            <h3>Risk alerts</h3>
+            <h3 data-i18n="app.risk.title">Risk alerts</h3>
             <div id="riskList" class="risk-list"></div>
           </div>
         </div>
@@ -143,45 +144,45 @@
 
       <div class="card google-card">
         <div class="card-head">
-          <h3>Step 3 — Save &amp; share</h3>
+          <h3 data-i18n="app.step3.title">Step 3 — Save &amp; share</h3>
         </div>
-        <p class="hint" style="margin-bottom: 14px;">Connect your Google account to save this plan to Sheets and add the deadline to Calendar.</p>
+        <p class="hint" style="margin-bottom: 14px;" data-i18n="app.step3.hint">Connect your Google account to save this plan to Sheets and add the deadline to Calendar.</p>
         <div class="google-actions">
-          <button type="button" id="googleConnectBtn" class="btn btn-small btn-ghost">Connect Google</button>
-          <button type="button" id="saveSheetsBtn" class="btn btn-small btn-ghost" disabled>Save to Google Sheets</button>
-          <button type="button" id="addCalendarBtn" class="btn btn-small btn-ghost" disabled>Add to Google Calendar</button>
-          <button type="button" id="sendReminderBtn" class="btn btn-small btn-ghost" disabled>Send reminder email</button>
+          <button type="button" id="googleConnectBtn" class="btn btn-small btn-ghost" data-i18n="app.connectGoogle">Connect Google</button>
+          <button type="button" id="saveSheetsBtn" class="btn btn-small btn-ghost" disabled data-i18n="app.saveSheets">Save to Google Sheets</button>
+          <button type="button" id="addCalendarBtn" class="btn btn-small btn-ghost" disabled data-i18n="app.addCalendar">Add to Google Calendar</button>
+          <button type="button" id="sendReminderBtn" class="btn btn-small btn-ghost" disabled data-i18n="app.sendReminder">Send reminder email</button>
         </div>
         <p id="googleStatus" class="analyze-status" role="status" aria-live="polite"></p>
       </div>
 
       <div class="card reminder-card" id="reminderCard">
         <div class="card-head">
-          <h3>Step 4 — Automatic email reminders</h3>
+          <h3 data-i18n="app.step4.title">Step 4 — Automatic email reminders</h3>
         </div>
-        <p class="hint" style="margin-bottom: 14px;">Confirm the real deadline date, and TeamFlow will automatically email your team as the deadline gets close — no need to come back and click anything. This works independently of Google, using the emails from Step 2.</p>
-        <label class="field-label" for="realDeadlineDate">Confirm the actual deadline date</label>
+        <p class="hint" style="margin-bottom: 14px;" data-i18n="app.step4.hint">Confirm the real deadline date, and TeamFlow will automatically email your team as the deadline gets close — no need to come back and click anything. This works independently of Google, using the emails from Step 2.</p>
+        <label class="field-label" for="realDeadlineDate" data-i18n="app.deadlineDate.label">Confirm the actual deadline date</label>
         <input type="date" id="realDeadlineDate" class="assignment-input" style="max-width: 200px;">
         <div class="google-actions" style="margin-top: 16px;">
-          <button type="button" id="enableReminderBtn" class="btn btn-small btn-ghost">Enable automatic reminders</button>
-          <button type="button" id="disableReminderBtn" class="btn btn-small btn-ghost" disabled>Turn off reminders</button>
+          <button type="button" id="enableReminderBtn" class="btn btn-small btn-ghost" data-i18n="app.enableReminders">Enable automatic reminders</button>
+          <button type="button" id="disableReminderBtn" class="btn btn-small btn-ghost" disabled data-i18n="app.disableReminders">Turn off reminders</button>
         </div>
         <p id="reminderStatus" class="analyze-status" role="status" aria-live="polite"></p>
       </div>
 
       <div class="card sync-card" id="syncCard">
         <div class="card-head">
-          <h3>Step 5 — Sync across devices</h3>
+          <h3 data-i18n="app.step5.title">Step 5 — Sync across devices</h3>
         </div>
-        <p class="hint" style="margin-bottom: 14px;">Connect Google above, save your plan to your account, then connect the same Google account on another device to load it back.</p>
+        <p class="hint" style="margin-bottom: 14px;" data-i18n="app.step5.hint">Connect Google above, save your plan to your account, then connect the same Google account on another device to load it back.</p>
         <div class="google-actions">
-          <button type="button" id="saveAccountBtn" class="btn btn-small btn-ghost" disabled>Save to my account</button>
-          <button type="button" id="loadAccountBtn" class="btn btn-small btn-ghost" disabled>Load from my account</button>
+          <button type="button" id="saveAccountBtn" class="btn btn-small btn-ghost" disabled data-i18n="app.saveAccount">Save to my account</button>
+          <button type="button" id="loadAccountBtn" class="btn btn-small btn-ghost" disabled data-i18n="app.loadAccount">Load from my account</button>
         </div>
         <p id="syncStatus" class="analyze-status" role="status" aria-live="polite"></p>
       </div>
 
-      <p class="demo-note">Your assignment, team, and task plan are saved in this browser, so they'll still be here next time you visit this page.</p>
+      <p class="demo-note" data-i18n="app.demoNote">Your assignment, team, and task plan are saved in this browser, so they'll still be here next time you visit this page.</p>
     </div>
   </section>
 </main>
@@ -190,13 +191,13 @@
   <div class="wrap footer-grid">
     <div>
       <img src="logo.png" class="logo-mark" alt="" aria-hidden="true">
-      <p class="footer-tagline">TeamFlow<br>AI coordination for student group projects</p>
+      <p class="footer-tagline" data-i18n="footer.tagline">TeamFlow<br>AI coordination for student group projects</p>
     </div>
     <nav class="footer-nav" aria-label="Footer">
-      <a href="index.html">Overview</a>
-      <a href="index.html#mvp">MVP</a>
-      <button type="button" id="privacyLinkBtn" class="footer-link-btn">Privacy &amp; data use</button>
-      <a href="mailto:hello@teamflow.app">Contact</a>
+      <a href="index.html" data-i18n="nav.overview">Overview</a>
+      <a href="index.html#mvp" data-i18n="footer.mvp">MVP</a>
+      <button type="button" id="privacyLinkBtn" class="footer-link-btn" data-i18n="footer.privacy">Privacy &amp; data use</button>
+      <a href="mailto:hello@teamflow.app" data-i18n="footer.contact">Contact</a>
     </nav>
   </div>
 </footer>
@@ -204,39 +205,40 @@
 <div class="modal-overlay" id="privacyOverlay" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
     <div class="modal-head">
-      <h2 id="privacyTitle">Privacy &amp; data use</h2>
+      <h2 id="privacyTitle" data-i18n="privacy.title">Privacy &amp; data use</h2>
       <button type="button" id="privacyCloseBtn" class="modal-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <p>This is a course-project prototype. Here's exactly what happens to your data — no accounts, no hidden tracking.</p>
+      <p data-i18n="privacy.intro">This is a course-project prototype. Here's exactly what happens to your data — no accounts, no hidden tracking.</p>
 
-      <h3>Assignment text &amp; team info</h3>
+      <h3 data-i18n="privacy.h1">Assignment text &amp; team info</h3>
       <p>What you type into the assignment box and team form stays in your browser. When you click "Build a Team Plan," it's sent to a small server function to generate the task plan (using an AI model where one is configured, or a free local rule-based planner otherwise) — it isn't stored on any server or database afterward. Uploaded images and PDFs are sent to the AI model the same way — for that one request, then discarded, never saved to disk. DOCX and TXT files are read and converted to text directly in your browser and never leave your device unless you click "Build a Team Plan" or "Fill team from upload."</p>
 
-      <h3>Saved locally, on your device only</h3>
+      <h3 data-i18n="privacy.h2">Saved locally, on your device only</h3>
       <p>Your current plan is saved in this browser's local storage so it's still here next time you visit. It never leaves your device unless you explicitly export or sync it (see below). Clearing your browser data will remove it.</p>
 
-      <h3>Google Sheets, Calendar &amp; Gmail</h3>
+      <h3 data-i18n="privacy.h3">Google Sheets, Calendar &amp; Gmail</h3>
       <p>Connecting Google is optional and only happens if you click "Connect Google." We request the minimum access needed — creating/editing spreadsheets, creating calendar events, and sending email on your behalf — nothing else (not your existing emails, contacts, or files). The access token is kept in memory only for that browser session and is never saved to disk. Nothing is sent to Google unless you click "Save to Google Sheets," "Add to Google Calendar," or "Send reminder email." If you fill in teammates' email addresses, "Add to Google Calendar" sends them a calendar invite and "Send reminder email" sends them an email with the task plan — both only when you click the button, and only do this with your teammates' knowledge.</p>
 
-      <h3>CSV export</h3>
+      <h3 data-i18n="privacy.h4">CSV export</h3>
       <p>Downloads a file directly to your device. It doesn't pass through any server.</p>
 
-      <h3>Automatic email reminders (Step 4)</h3>
+      <h3 data-i18n="privacy.h5">Automatic email reminders (Step 4)</h3>
       <p>This is one of two features that <em>does</em> save data outside your browser — it has to, since it needs to run without you present. Turning it on stores your confirmed deadline date and your teammates' emails on a small database so a scheduled job can email them as the deadline approaches. Turning reminders off deletes this record.</p>
 
-      <h3>Account sync (Step 5)</h3>
+      <h3 data-i18n="privacy.h6">Account sync (Step 5)</h3>
       <p>Also optional. If you click "Save to my account," your whole plan (assignment text, team, tasks) is stored on the same database, tied to your Google account's email — so you can get it back by connecting the same Google account on another device. This overwrites whatever was previously saved for that account. Nothing is synced automatically; it only happens when you click "Save to my account" or "Load from my account."</p>
 
-      <h3>Team-shared plan ("Working with a team?")</h3>
+      <h3 data-i18n="privacy.h7">Team-shared plan ("Working with a team?")</h3>
       <p>If you create or join a shared plan, your team's plan (assignment text, team info, tasks) is stored on the same database under a share code, and updates are pushed there automatically as you make changes (so teammates can stay in sync) — no Google login required for this one. Anyone who has the code or link can view and edit that plan, the same way anyone with a Google Docs link can if you share it — so only share the code with your actual team.</p>
 
-      <h3>What we don't do</h3>
-      <p>No ads, no third-party trackers, no selling data, no account or password required.</p>
+      <h3 data-i18n="privacy.h8">What we don't do</h3>
+      <p data-i18n="privacy.notdo">No ads, no third-party trackers, no selling data, no account or password required.</p>
     </div>
   </div>
 </div>
 
+<script src="lang.js"></script>
 <script src="data.js"></script>
 <script src="script.js"></script>
 <script src="privacy-modal.js"></script>
