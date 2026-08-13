@@ -564,6 +564,65 @@
     });
   }
 
+  // Whole-task assignment can only get so close to even — task hours are
+  // discrete chunks, so odd combinations (8h/8h/8h/9h/6h/6h) can be the
+  // best possible whole-task result. This pass looks for a large task
+  // owned by whoever currently has the most hours, splits it into two
+  // roughly-equal pieces, and hands the second piece to whoever has the
+  // least — repeating a few times until the spread is small enough or
+  // there's nothing left worth splitting.
+  const SPLIT_MIN_HOURS = 3; // don't split anything smaller than this — the halves would be too tiny to be a real task
+  const SPLIT_MAX_COUNT = 3; // cap how many splits we're willing to make, so the plan doesn't fragment into tiny slivers
+  const SPLIT_TARGET_SPREAD = 1.5; // stop once the heaviest/lightest gap is this small
+
+  function balanceBySplitting(taskList, members) {
+    const tasks = taskList.map((t) => ({ ...t }));
+    let splitsUsed = 0;
+
+    function computeTotals() {
+      const map = {};
+      members.forEach((m) => (map[m.id] = 0));
+      tasks.forEach((t) => {
+        map[t.owner] = (map[t.owner] || 0) + t.hours;
+      });
+      return map;
+    }
+
+    while (splitsUsed < SPLIT_MAX_COUNT) {
+      const totalsMap = computeTotals();
+      const ranked = members.map((m) => ({ id: m.id, hours: totalsMap[m.id] || 0 })).sort((a, b) => b.hours - a.hours);
+      const heaviest = ranked[0];
+      const lightest = ranked[ranked.length - 1];
+      if (!heaviest || !lightest || heaviest.id === lightest.id || heaviest.hours - lightest.hours <= SPLIT_TARGET_SPREAD) break;
+
+      // Don't re-split something that's already a split fragment — avoids "(Part 1) (Part 1)" nonsense.
+      const candidate = tasks
+        .filter((t) => t.owner === heaviest.id && t.hours >= SPLIT_MIN_HOURS && !t.name.includes("(Part"))
+        .sort((a, b) => b.hours - a.hours)[0];
+      if (!candidate) break; // nothing left worth splitting for this member
+
+      const baseName = candidate.name;
+      const firstHalf = Math.round((candidate.hours / 2) * 2) / 2; // round to nearest 0.5h
+      const secondHalf = candidate.hours - firstHalf;
+
+      candidate.name = `${baseName} (Part 1)`;
+      candidate.hours = firstHalf;
+
+      tasks.push({
+        id: candidate.id + "-split" + splitsUsed,
+        name: `${baseName} (Part 2)`,
+        hours: secondHalf,
+        due: candidate.due,
+        status: "todo",
+        owner: lightest.id,
+      });
+
+      splitsUsed++;
+    }
+
+    return tasks;
+  }
+
   // ---- build the plan: try the real AI function, fall back to the local planner -------------------------------------------------------
   // ---- unified file intake: click-to-browse, drag & drop, and paste all funnel through here -------------------------------------------------------
   const MAX_ATTACHMENTS = 4;
@@ -912,7 +971,8 @@
     rawTasks.forEach((t, i) => {
       t.owner = fairOwners[i];
     });
-    tasks = deriveDependencies(rawTasks);
+    const balancedTasks = balanceBySplitting(rawTasks, activeMembers);
+    tasks = deriveDependencies(balancedTasks);
 
     renderAssignmentSummary();
     renderTasks();
